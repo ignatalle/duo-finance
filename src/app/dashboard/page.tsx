@@ -5,30 +5,40 @@ import { FormularioTransaccion } from '@/components/features/FormularioTransacci
 import { ListaTransacciones } from '@/components/features/ListaTransacciones'
 import { ModuloPareja } from '@/components/features/ModuloPareja'
 import { ResumenBalances } from '@/components/features/ResumenBalances'
+import { SelectorMes } from '@/components/features/SelectorMes'
 
-export default async function DashboardPage() {
+// NUEVO: Recibimos los parámetros de la URL (searchParams)
+export default async function DashboardPage(props: { searchParams: Promise<{ mes?: string }> }) {
   const supabase = await createClient()
-
-  // Traemos los datos del usuario logueado
   const { data: { user }, error } = await supabase.auth.getUser()
 
   if (error || !user) {
     redirect('/login')
   }
 
-  // 1. Traemos tu perfil para saber si tienes pareja
+  // Lógica para saber qué mes estamos mirando
+  const searchParams = await props.searchParams
+  const rawMes = searchParams.mes || new Date().toISOString().slice(0, 7)
+  const mesMatch = rawMes.match(/^(\d{4})-(\d{2})$/)
+  const year = mesMatch ? Number(mesMatch[1]) : new Date().getFullYear()
+  const month = mesMatch ? Number(mesMatch[2]) : new Date().getMonth() + 1
+  const inicioMes = new Date(year, month - 1, 1).toISOString()
+  const finMes = new Date(year, month, 0, 23, 59, 59).toISOString()
+
+  // 1. Traemos tu perfil
   const { data: perfil } = await supabase
     .from('perfiles')
     .select('*')
     .eq('id', user.id)
     .single()
 
-  // 2. Traemos las transacciones para pasárselas a la lista
+  // 2. Traemos las transacciones filtradas por ese mes específico
   const { data: transacciones } = await supabase
     .from('transacciones')
     .select('*')
+    .gte('created_at', inicioMes)
+    .lte('created_at', finMes)
     .order('created_at', { ascending: false })
-    .limit(10)
 
   // Función para cerrar sesión
   const signOut = async () => {
@@ -50,12 +60,19 @@ export default async function DashboardPage() {
           </form>
         </header>
 
-        <main className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 shadow-xl">
-          <h2 className="text-xl mb-6 text-white font-semibold flex items-center gap-2">
-            Panel de Control
-          </h2>
+        <main className="bg-zinc-950/80 border border-zinc-800/60 rounded-3xl p-6 md:p-8 shadow-2xl backdrop-blur-xl">
           
-          <ResumenBalances />
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 border-b border-zinc-800/50 pb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-white tracking-tight">Panel de Control</h2>
+              <p className="text-sm text-zinc-400 mt-1">Gestión de presupuesto y saldos</p>
+            </div>
+            <div className="flex items-center">
+              <SelectorMes />
+            </div>
+          </div>
+
+          <ResumenBalances inicioMes={inicioMes} finMes={finMes} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="flex flex-col gap-6">
