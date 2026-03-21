@@ -141,6 +141,33 @@ export async function editarTransaccion(formData: FormData) {
   return { success: true }
 }
 
+// Obtener datos para exportar a Excel/CSV
+export async function obtenerDatosExportacion(rango: 'mes' | 'anio', mesRef: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autorizado' }
+
+  const [year, month] = mesRef.split('-')
+  let inicio, fin
+
+  if (rango === 'mes') {
+    inicio = new Date(Number(year), Number(month) - 1, 1).toISOString()
+    fin = new Date(Number(year), Number(month), 0, 23, 59, 59).toISOString()
+  } else {
+    inicio = new Date(Number(year), 0, 1).toISOString()
+    fin = new Date(Number(year), 11, 31, 23, 59, 59).toISOString()
+  }
+
+  const { data } = await supabase
+    .from('transacciones')
+    .select('*')
+    .gte('created_at', inicio)
+    .lte('created_at', fin)
+    .order('created_at', { ascending: true })
+
+  return { data }
+}
+
 export async function marcarComoPagado(id: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

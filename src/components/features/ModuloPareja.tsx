@@ -1,87 +1,126 @@
 'use client'
 
-import { useRef, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { crearPareja, unirsePareja } from '@/app/actions/pareja'
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { vincularPareja, generarCodigoVinculacion } from '@/app/actions/pareja'
+import { HeartHandshake, Copy, Check, Link2, Loader2 } from 'lucide-react'
 
-export function ModuloPareja({ perfil }: { perfil: any }) {
-  const formRef = useRef<HTMLFormElement>(null)
-  const [loading, setLoading] = useState(false)
-  const [modo, setModo] = useState<'crear' | 'unirse'>('crear')
+export function ModuloPareja({ parejaId }: { parejaId: string | null | undefined; codigoPareja?: string | null }) {
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+  const [miCodigo, setMiCodigo] = useState<string | null>(null)
+  const [copiado, setCopiado] = useState(false)
+  const [errorMsj, setErrorMsj] = useState<string | null>(null)
 
-  const handleCrear = async (formData: FormData) => {
-    setLoading(true)
-    await crearPareja(formData)
-    setLoading(false)
+  // Si ya tiene pareja vinculada, no mostramos nada (gestión desde la hamburguesa)
+  if (parejaId) return null
+
+  const handleGenerarCodigo = async () => {
+    try {
+      const codigo = await generarCodigoVinculacion()
+      setMiCodigo(codigo)
+      setErrorMsj(null)
+    } catch (e) {
+      setErrorMsj(e instanceof Error ? e.message : 'No se pudo generar el código')
+    }
   }
 
-  const handleUnirse = async (formData: FormData) => {
-    setLoading(true)
-    await unirsePareja(formData)
-    setLoading(false)
+  const handleCopiar = () => {
+    if (miCodigo) {
+      navigator.clipboard.writeText(miCodigo)
+      setCopiado(true)
+      setTimeout(() => setCopiado(false), 2000)
+    }
   }
 
-  // VISTA 1: Ya tienes pareja (Mostramos el código para invitar)
-  if (perfil?.pareja_id) {
-    return (
-      <div className="p-6 border border-zinc-800 rounded-lg bg-zinc-900">
-        <h3 className="text-lg font-medium text-green-400 mb-2">Espacio Compartido</h3>
-        <p className="text-sm text-zinc-400">Estás vinculado/a al espacio con el ID:</p>
-        
-        <div className="mt-3 p-3 bg-zinc-950 border border-zinc-800 rounded-md flex items-center justify-between gap-2">
-          <span className="text-xs font-mono text-zinc-400 truncate select-all">{perfil.pareja_id}</span>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="h-8 border-zinc-700 bg-zinc-800 text-zinc-300 hover:text-white"
-            onClick={() => navigator.clipboard.writeText(perfil.pareja_id)}
-          >
-            Copiar
-          </Button>
-        </div>
-        
-        <p className="text-xs text-zinc-500 mt-4">
-          Pásale este código a tu partner para que lo ingrese en su cuenta.
-        </p>
-      </div>
-    )
+  const handleVincular = async (formData: FormData) => {
+    setErrorMsj(null)
+    startTransition(async () => {
+      const result = await vincularPareja(formData)
+      if (result?.error) {
+        setErrorMsj(result.error)
+      } else {
+        router.refresh()
+      }
+    })
   }
 
-  // VISTA 2: No tienes pareja (Mostramos opciones para crear o unirse)
   return (
-    <div className="p-6 border border-zinc-800 rounded-lg bg-zinc-900">
-      <div className="flex gap-4 mb-4 border-b border-zinc-800 pb-2">
-        <button 
-          onClick={() => setModo('crear')}
-          className={`text-sm font-medium pb-2 -mb-[9px] ${modo === 'crear' ? 'text-white border-b-2 border-green-500' : 'text-zinc-500 hover:text-zinc-400'}`}
-        >
-          Crear Nuevo
-        </button>
-        <button 
-          onClick={() => setModo('unirse')}
-          className={`text-sm font-medium pb-2 -mb-[9px] ${modo === 'unirse' ? 'text-white border-b-2 border-green-500' : 'text-zinc-500 hover:text-zinc-400'}`}
-        >
-          Unirse con Código
-        </button>
+    <div className="bg-white p-6 rounded-[32px] shadow-sm border border-indigo-100 relative overflow-hidden">
+      {/* Fondo decorativo */}
+      <div className="absolute -right-6 -top-6 w-24 h-24 bg-indigo-50 rounded-full blur-2xl pointer-events-none"></div>
+
+      <div className="flex items-center gap-3 mb-4 relative z-10">
+        <div className="w-10 h-10 rounded-2xl bg-indigo-100 flex items-center justify-center text-indigo-600 shadow-sm">
+          <HeartHandshake size={20} />
+        </div>
+        <div>
+          <h3 className="font-extrabold text-slate-800 text-lg tracking-tight">Vincular Cuenta</h3>
+          <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">Gestión en pareja</p>
+        </div>
       </div>
 
-      {modo === 'crear' ? (
-        <form ref={formRef} action={handleCrear} className="flex flex-col gap-3 mt-4">
-          <p className="text-sm text-zinc-400 mb-1">Crea un espacio para gestionar gastos conjuntos.</p>
-          <input type="text" name="nombre" placeholder="Ej: Igna y Cami" className="bg-zinc-800 border border-zinc-700 rounded-md p-2 text-white text-sm" required />
-          <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 text-white mt-1">
-            {loading ? 'Creando...' : 'Crear Espacio'}
-          </Button>
-        </form>
-      ) : (
-        <form ref={formRef} action={handleUnirse} className="flex flex-col gap-3 mt-4">
-          <p className="text-sm text-zinc-400 mb-1">Pega el código que te pasó tu partner.</p>
-          <input type="text" name="pareja_id" placeholder="Pega el código aquí..." className="bg-zinc-800 border border-zinc-700 rounded-md p-2 text-white text-sm font-mono" required />
-          <Button type="submit" disabled={loading} className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white mt-1">
-            {loading ? 'Vinculando...' : 'Unirse al Espacio'}
-          </Button>
-        </form>
+      {errorMsj && (
+        <p className="text-xs text-rose-500 bg-rose-50 p-3 rounded-xl border border-rose-100 mb-4 font-semibold">
+          {errorMsj}
+        </p>
       )}
+
+      <div className="flex flex-col gap-4 relative z-10">
+        
+        {/* SECCIÓN 1: Unirse con código */}
+        <form action={handleVincular} className="flex gap-2">
+          <input 
+            type="text" 
+            name="codigo" 
+            placeholder="Pegar código aquí..." 
+            className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-800 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-medium placeholder-slate-400"
+            required
+            minLength={6}
+            maxLength={6}
+          />
+          <button 
+            type="submit" 
+            disabled={isPending}
+            className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white px-4 rounded-2xl font-bold text-sm transition-colors shadow-sm flex items-center justify-center"
+          >
+            {isPending ? <Loader2 size={18} className="animate-spin" /> : 'Unirse'}
+          </button>
+        </form>
+
+        <div className="flex items-center gap-3">
+          <div className="h-px bg-slate-100 flex-1"></div>
+          <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">O INVITA A TU PAREJA</span>
+          <div className="h-px bg-slate-100 flex-1"></div>
+        </div>
+
+        {/* SECCIÓN 2: Generar mi código */}
+        {!miCodigo ? (
+          <button 
+            type="button"
+            onClick={handleGenerarCodigo}
+            className="w-full bg-slate-50 hover:bg-slate-100 text-indigo-600 border border-slate-200 py-3 rounded-2xl font-bold text-sm transition-colors flex items-center justify-center gap-2"
+          >
+            <Link2 size={16} /> Generar mi código
+          </button>
+        ) : (
+          <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 text-center">
+            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Tu código de invitación</p>
+            <div className="flex items-center justify-center gap-3 mt-2">
+              <span className="text-2xl font-black text-emerald-700 tracking-[0.2em]">{miCodigo}</span>
+              <button 
+                type="button"
+                onClick={handleCopiar}
+                className="w-8 h-8 bg-emerald-200/50 hover:bg-emerald-200 text-emerald-700 rounded-full flex items-center justify-center transition-colors"
+                title="Copiar código"
+              >
+                {copiado ? <Check size={16} /> : <Copy size={16} />}
+              </button>
+            </div>
+          </div>
+        )}
+
+      </div>
     </div>
   )
 }
