@@ -51,10 +51,8 @@ export default async function DashboardPage(props: { searchParams: Promise<{ mes
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="md:col-span-2">
-          <DashboardAlertas mesRef={mesParam} usuarioId={user.id} />
-        </div>
-        <DashboardSalud inicioMes={inicioMes} finMes={finMes} usuarioId={user.id} />
+        <DashboardAlertas />
+        <DashboardSalud />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start">

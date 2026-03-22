@@ -28,42 +28,40 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans">
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:w-72 bg-zinc-900 border-r border-zinc-800">
-        <div className="h-full flex flex-col">
-          <div className="h-16 px-6 flex items-center justify-between">
-            <div className="font-extrabold tracking-tight text-zinc-50">Duo Finance</div>
-          </div>
+      {/* Desktop Sidebar - visible desde 768px */}
+      <aside className="hidden md:flex md:fixed md:inset-y-0 md:left-0 md:w-72 md:flex-col bg-zinc-900 border-r border-zinc-800">
+        <div className="h-16 px-6 flex items-center justify-between shrink-0">
+          <div className="font-extrabold tracking-tight text-zinc-50">Duo Finance</div>
+        </div>
 
-          <nav className="px-3 pb-3 overflow-y-auto">
-            <div className="space-y-1">
-              <DashboardNavLinks />
-            </div>
-          </nav>
-
-          <div className="mt-auto px-3 pb-6">
-            <form action={cerrarSesion}>
-              <button
-                type="submit"
-                className="w-full flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-emerald-400"
-              >
-                <LogOut size={18} />
-                <span className="truncate">Cerrar Sesión</span>
-              </button>
-            </form>
+        <nav className="flex-1 min-h-0 px-3 py-3 overflow-y-auto">
+          <div className="space-y-1">
+            <DashboardNavLinks />
           </div>
+        </nav>
+
+        <div className="shrink-0 px-3 pb-6">
+          <form action={cerrarSesion}>
+            <button
+              type="submit"
+              className="w-full flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-emerald-400"
+            >
+              <LogOut size={18} />
+              <span className="truncate">Cerrar Sesión</span>
+            </button>
+          </form>
         </div>
       </aside>
 
       {/* Main content */}
-      <main className="lg:pl-72 pb-24 lg:pb-8">
+      <main className="md:pl-72 pb-24 md:pb-8">
         <DashboardShell>
           <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6">{children}</div>
         </DashboardShell>
       </main>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-zinc-900/90 backdrop-blur border-t border-zinc-800">
+      {/* Mobile Bottom Navigation - solo en pantallas < 768px */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-zinc-900/90 backdrop-blur border-t border-zinc-800">
         <div className="px-2 py-2">
           <DashboardNavMobile cerrarSesion={cerrarSesionBtn} />
         </div>
