@@ -5,7 +5,12 @@ import { useRouter } from 'next/navigation'
 import { vincularPareja, generarCodigoVinculacion } from '@/app/actions/pareja'
 import { HeartHandshake, Copy, Check, Link2, Loader2 } from 'lucide-react'
 
-export function ModuloPareja({ parejaId }: { parejaId: string | null | undefined; codigoPareja?: string | null }) {
+type ModuloParejaProps =
+  | { parejaId: string | null | undefined; codigoPareja?: string | null; perfil?: never }
+  | { perfil: { pareja_id?: string | null } | null; parejaId?: never; codigoPareja?: never }
+
+export function ModuloPareja(props: ModuloParejaProps) {
+  const parejaId = 'perfil' in props ? props.perfil?.pareja_id : props.parejaId
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [miCodigo, setMiCodigo] = useState<string | null>(null)
