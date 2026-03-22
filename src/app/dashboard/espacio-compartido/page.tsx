@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { ModuloPareja } from '@/components/features/ModuloPareja'
-import { ResumenBalances } from '@/components/features/ResumenBalances'
+import { ParejaResumen } from '@/components/features/ParejaResumen'
 import { SelectorMes } from '@/components/features/SelectorMes'
 
 export default async function EspacioCompartidoPage(props: { searchParams: Promise<{ mes?: string }> }) {
@@ -22,13 +22,15 @@ export default async function EspacioCompartidoPage(props: { searchParams: Promi
     .single()
 
   let codigoPareja: string | null = null
+  let nombrePareja = 'Tu pareja'
   if (perfil?.pareja_id) {
     const { data: pareja } = await supabase
       .from('parejas')
-      .select('codigo')
+      .select('codigo, nombre')
       .eq('id', perfil.pareja_id)
       .single()
     codigoPareja = pareja?.codigo ?? null
+    nombrePareja = pareja?.nombre || 'Tu pareja'
   }
 
   return (
@@ -37,14 +39,18 @@ export default async function EspacioCompartidoPage(props: { searchParams: Promi
         <SelectorMes />
       </div>
 
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6">
         <div className="rounded-[32px] bg-zinc-900/40 border border-zinc-800 p-4">
           <ModuloPareja parejaId={perfil?.pareja_id} codigoPareja={codigoPareja} />
         </div>
         {perfil?.pareja_id && (
-          <div className="rounded-[32px] bg-zinc-900/40 border border-zinc-800 p-4">
-            <ResumenBalances inicioMes={inicioMes} finMes={finMes} />
-          </div>
+          <ParejaResumen
+            inicioMes={inicioMes}
+            finMes={finMes}
+            usuarioId={user.id}
+            parejaId={perfil.pareja_id}
+            nombrePareja={nombrePareja}
+          />
         )}
       </div>
     </div>

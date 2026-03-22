@@ -13,6 +13,8 @@ export interface Transaccion {
   tipo_gasto: 'fijo' | 'variable' | null
   cuota_actual: number | null
   cuota_total: number | null
+  vencimiento_en: string | null
+  tarjeta_id: string | null
   created_at: string
 }
 

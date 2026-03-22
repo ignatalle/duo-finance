@@ -11,6 +11,7 @@ export async function ResumenBalances({ inicioMes, finMes }: { inicioMes: string
   const { data: transacciones } = await supabase
     .from('transacciones')
     .select('monto, tipo')
+    .eq('usuario_id', user.id)
     .gte('created_at', inicioMes)
     .lte('created_at', finMes)
 

@@ -2,13 +2,16 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ArrowLeftRight, LayoutDashboard, Settings, Users } from 'lucide-react'
+import { LayoutDashboard, Wallet, CreditCard, TrendingUp, Users, Download, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
-  { href: '/dashboard', label: 'Panel', icon: LayoutDashboard },
-  { href: '/dashboard/movimientos', label: 'Movimientos', icon: ArrowLeftRight },
-  { href: '/dashboard/espacio-compartido', label: 'Espacio Compartido', icon: Users },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard/gastos', label: 'Gastos', icon: Wallet },
+  { href: '/dashboard/tarjetas', label: 'Tarjetas', icon: CreditCard },
+  { href: '/dashboard/planificacion', label: 'Planificar', icon: TrendingUp },
+  { href: '/dashboard/espacio-compartido', label: 'Pareja', icon: Users },
+  { href: '/dashboard/reportes', label: 'Reportes', icon: Download },
   { href: '/dashboard/configuracion', label: 'Configuración', icon: Settings },
 ]
 

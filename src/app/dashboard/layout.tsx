@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { LogOut } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { DashboardNavLinks, DashboardNavMobile } from '@/components/dashboard/DashboardNav'
+import { DashboardShell } from '@/components/dashboard/DashboardShell'
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   async function cerrarSesion() {
@@ -56,7 +57,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
       {/* Main content */}
       <main className="lg:pl-72 pb-24 lg:pb-8">
-        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6">{children}</div>
+        <DashboardShell>
+          <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6">{children}</div>
+        </DashboardShell>
       </main>
 
       {/* Mobile Bottom Navigation */}

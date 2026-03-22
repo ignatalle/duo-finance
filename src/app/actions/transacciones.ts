@@ -22,58 +22,67 @@ export async function registrarTransaccion(formData: FormData) {
   if (!['ingreso', 'gasto'].includes(tipo)) {
     return { success: false, error: 'Tipo de transacción inválido' }
   }
+  if (!descripcionFinal.trim()) {
+    return { success: false, error: 'El concepto no puede estar vacío' }
+  }
 
-  // LA MAGIA DEL DÓLAR BLUE
+  // LA MAGIA DEL DÓLAR BLUE (SIN HARDCODEO)
   let montoFinal = montoOriginal
   if (moneda === 'USD') {
     try {
       const res = await fetch('https://dolarapi.com/v1/dolares/blue', { next: { revalidate: 60 } })
-      if (!res.ok) throw new Error(`API ${res.status}`)
+      if (!res.ok) throw new Error(`API Dólar respondió con status ${res.status}`)
       const data = await res.json()
       const valorBlue = Number(data?.venta)
-      if (!Number.isFinite(valorBlue) || valorBlue <= 0) throw new Error('Cotización inválida')
+      
+      if (!Number.isFinite(valorBlue) || valorBlue <= 0) throw new Error('Cotización devuelta es inválida')
 
       montoFinal = montoOriginal * valorBlue
       descripcionFinal = `${descripcionFinal} (US$ ${montoOriginal} a $${valorBlue} Blue)`.trim()
     } catch (error) {
       console.error('Error obteniendo Dólar Blue:', error)
-      montoFinal = montoOriginal * 1050
-      descripcionFinal = `${descripcionFinal} (US$ ${montoOriginal} - Conversión aprox)`.trim()
+      // 🔥 FIX: Frenamos la operación. No guardamos datos falsos.
+      return { success: false, error: 'Error al obtener cotización del Dólar. Intenta nuevamente.' }
     }
   }
 
   const cuota_actual = formData.get('cuota_actual') ? parseInt(formData.get('cuota_actual') as string) : null
   const cuota_total = formData.get('cuota_total') ? parseInt(formData.get('cuota_total') as string) : null
   const estadoInicial = (formData.get('estado') as string) || 'pagado'
+  const vencimientoEn = formData.get('vencimiento_en') ? (formData.get('vencimiento_en') as string) : null
+  const tarjetaId = formData.get('tarjeta_id') ? (formData.get('tarjeta_id') as string) : null
 
   const datosBase = {
     usuario_id: user.id,
     pareja_id: perfil?.pareja_id || null,
-    monto: montoFinal, // Acá guardamos los pesos ya convertidos
+    monto: montoFinal,
     tipo: tipo,
     categoria: formData.get('categoria') as string,
-    descripcion: descripcionFinal, // Acá va con la aclaración del dólar
+    descripcion: descripcionFinal,
     es_compartido: formData.get('es_compartido') === 'on',
     pagado_por: user.id,
     tipo_gasto: tipo === 'gasto' ? (formData.get('tipo_gasto') as string) : null,
+    vencimiento_en: vencimientoEn || null,
+    tarjeta_id: tarjetaId || null,
   }
 
-  // LA MAGIA: Si es una cuota, generamos todas las filas hacia el futuro
+  // LOGICA DE CUOTAS ARREGLADA
   if (tipo === 'gasto' && cuota_actual && cuota_total && cuota_actual <= cuota_total) {
     const transaccionesMultiples = []
     let cuotaIteracion = cuota_actual
     let mesesAdelante = 0
+    
+    const hoy = new Date()
+    // 🔥 FIX: Respetamos el día de compra. Usamos Math.min para evitar que un 31 de Enero salte a Marzo.
+    const diaCompra = Math.min(hoy.getDate(), 28) 
 
     while (cuotaIteracion <= cuota_total) {
-      const hoy = new Date()
-      // Fijamos el día a mitad de mes para evitar bugs al saltar de meses con 31 a meses de 28/30 días
-      const fechaGasto = new Date(hoy.getFullYear(), hoy.getMonth() + mesesAdelante, 15)
+      const fechaGasto = new Date(hoy.getFullYear(), hoy.getMonth() + mesesAdelante, diaCompra)
 
       transaccionesMultiples.push({
         ...datosBase,
         cuota_actual: cuotaIteracion,
         cuota_total: cuota_total,
-        // La de este mes respeta tu formulario. Las del futuro nacen pendientes.
         estado: mesesAdelante === 0 ? estadoInicial : 'pendiente',
         created_at: fechaGasto.toISOString()
       })
@@ -85,16 +94,14 @@ export async function registrarTransaccion(formData: FormData) {
     const { error } = await supabase.from('transacciones').insert(transaccionesMultiples)
     if (error) {
       console.error('Error insertando cuotas:', error)
-      revalidatePath('/dashboard')
-      return { success: false, error: 'No se pudieron guardar las cuotas' }
+      return { success: false, error: 'No se pudieron guardar las cuotas en la base de datos' }
     }
   } else {
     const datosNormales = { ...datosBase, estado: estadoInicial, cuota_actual: null, cuota_total: null }
     const { error } = await supabase.from('transacciones').insert(datosNormales)
     if (error) {
       console.error('Error insertando transacción:', error)
-      revalidatePath('/dashboard')
-      return { success: false, error: 'No se pudo guardar la transacción' }
+      return { success: false, error: 'No se pudo guardar el movimiento' }
     }
   }
 
@@ -180,4 +187,49 @@ export async function marcarComoPagado(id: string) {
   }
   revalidatePath('/dashboard')
   return { success: true }
+}
+
+/** Gastos fijos pendientes del mes (estado=pendiente, tipo_gasto=fijo) para calcular saldo real */
+export async function obtenerGastosFijosPendientes(usuarioId: string, mesRef: string) {
+  const supabase = await createClient()
+  const [year, month] = mesRef.split('-')
+  const inicio = new Date(Number(year), Number(month) - 1, 1).toISOString()
+  const fin = new Date(Number(year), Number(month), 0, 23, 59, 59).toISOString()
+
+  const { data, error } = await supabase
+    .from('transacciones')
+    .select('id, monto, descripcion, estado, vencimiento_en')
+    .eq('usuario_id', usuarioId)
+    .eq('tipo', 'gasto')
+    .eq('tipo_gasto', 'fijo')
+    .eq('estado', 'pendiente')
+    .gte('created_at', inicio)
+    .lte('created_at', fin)
+
+  if (error) return { data: [], error: error.message }
+  return { data: data || [], error: null }
+}
+
+/** Consumo por categoría en el mes (suma de gastos variables y no fijos) */
+export async function obtenerConsumoPorCategoria(usuarioId: string, mesRef: string) {
+  const supabase = await createClient()
+  const [year, month] = mesRef.split('-')
+  const inicio = new Date(Number(year), Number(month) - 1, 1).toISOString()
+  const fin = new Date(Number(year), Number(month), 0, 23, 59, 59).toISOString()
+
+  const { data, error } = await supabase
+    .from('transacciones')
+    .select('categoria, monto')
+    .eq('usuario_id', usuarioId)
+    .eq('tipo', 'gasto')
+    .gte('created_at', inicio)
+    .lte('created_at', fin)
+
+  if (error) return { data: {} as Record<string, number>, error: error.message }
+
+  const consumido: Record<string, number> = {}
+  for (const t of data || []) {
+    consumido[t.categoria] = (consumido[t.categoria] || 0) + t.monto
+  }
+  return { data: consumido, error: null }
 }
