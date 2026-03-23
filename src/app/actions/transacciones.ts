@@ -55,6 +55,8 @@ export async function registrarTransaccion(formData: FormData) {
   const fechaStr = formData.get('fecha') as string | null
   const created_at = fechaStr ? new Date(fechaStr + 'T12:00:00').toISOString() : undefined
 
+  const esPrestamo = formData.get('es_prestamo') === 'on'
+
   const datosBase = {
     usuario_id: user.id,
     pareja_id: perfil?.pareja_id || null,
@@ -67,6 +69,7 @@ export async function registrarTransaccion(formData: FormData) {
     tipo_gasto: tipo === 'gasto' ? (formData.get('tipo_gasto') as string) : null,
     vencimiento_en: vencimientoEn || null,
     tarjeta_id: tarjetaId || null,
+    es_prestamo: esPrestamo,
     ...(created_at && { created_at }),
   }
 
@@ -75,13 +78,12 @@ export async function registrarTransaccion(formData: FormData) {
     const transaccionesMultiples = []
     let cuotaIteracion = cuota_actual
     let mesesAdelante = 0
-    
-    const hoy = new Date()
-    // 🔥 FIX: Respetamos el día de compra. Usamos Math.min para evitar que un 31 de Enero salte a Marzo.
-    const diaCompra = Math.min(hoy.getDate(), 28) 
+
+    const fechaBase = fechaStr ? new Date(fechaStr + 'T12:00:00') : new Date()
+    const diaCompra = Math.min(fechaBase.getDate(), 28) 
 
     while (cuotaIteracion <= cuota_total) {
-      const fechaGasto = new Date(hoy.getFullYear(), hoy.getMonth() + mesesAdelante, diaCompra)
+      const fechaGasto = new Date(fechaBase.getFullYear(), fechaBase.getMonth() + mesesAdelante, diaCompra)
 
       transaccionesMultiples.push({
         ...datosBase,
@@ -117,13 +119,13 @@ export async function eliminarTransaccion(id: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Usuario no autenticado')
-  // Solo borramos si la transacción es del usuario (RLS puede reforzar)
   const { error } = await supabase.from('transacciones').delete().eq('id', id).eq('usuario_id', user.id)
   if (error) {
     console.error('Error eliminando transacción:', error)
     return { error: 'No se pudo eliminar' }
   }
   revalidatePath('/dashboard')
+  revalidatePath('/dashboard/movimientos')
   return { success: true }
 }
 
@@ -134,13 +136,24 @@ export async function editarTransaccion(formData: FormData) {
 
   const id = formData.get('id') as string
   const tipo = (formData.get('tipo') as string) || 'gasto'
+  const monto = parseFloat(formData.get('monto') as string)
+  const fechaStr = formData.get('fecha') as string | null
 
-  const datos = {
-    monto: parseFloat(formData.get('monto') as string),
+  if (Number.isNaN(monto) || monto <= 0) {
+    return { error: 'Monto inválido' }
+  }
+
+  const datos: Record<string, unknown> = {
+    monto,
     categoria: formData.get('categoria') as string,
     descripcion: (formData.get('descripcion') as string) || '',
     estado: (formData.get('estado') as string) || 'pagado',
     tipo_gasto: tipo === 'gasto' ? (formData.get('tipo_gasto') as string) || null : null,
+    es_compartido: formData.get('es_compartido') === 'on',
+  }
+
+  if (fechaStr) {
+    datos.created_at = new Date(fechaStr + 'T12:00:00').toISOString()
   }
 
   const { error } = await supabase.from('transacciones').update(datos).eq('id', id).eq('usuario_id', user.id)
@@ -149,6 +162,7 @@ export async function editarTransaccion(formData: FormData) {
     return { error: 'No se pudo editar' }
   }
   revalidatePath('/dashboard')
+  revalidatePath('/dashboard/movimientos')
   return { success: true }
 }
 

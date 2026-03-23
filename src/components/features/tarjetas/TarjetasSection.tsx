@@ -7,6 +7,7 @@ import { LibertadTarjetas } from './LibertadTarjetas'
 import { CardTarjetaCredito, CardNuevaTarjeta } from './CardTarjetaCredito'
 import { CuotasPendientes } from './CuotasPendientes'
 import { ModalVincularTarjeta } from './ModalVincularTarjeta'
+import { ModalConfirmarEliminarTarjeta } from './ModalConfirmarEliminarTarjeta'
 
 interface CuotaItem {
   detalle: string
@@ -31,6 +32,21 @@ export function TarjetasSection({
   tieneDeuda,
 }: TarjetasSectionProps) {
   const [modalOpen, setModalOpen] = useState(false)
+  const [tarjetaAEditar, setTarjetaAEditar] = useState<Tarjeta | null>(null)
+  const [tarjetaAEliminar, setTarjetaAEliminar] = useState<Tarjeta | null>(null)
+
+  const openModalCrear = () => {
+    setTarjetaAEditar(null)
+    setModalOpen(true)
+  }
+  const openModalEditar = (t: Tarjeta) => {
+    setTarjetaAEditar(t)
+    setModalOpen(true)
+  }
+  const closeModal = () => {
+    setModalOpen(false)
+    setTarjetaAEditar(null)
+  }
 
   const getDeudaTarjeta = (tarjetaId: string) => {
     const cuotas = cuotasPorTarjeta[tarjetaId] || []
@@ -47,7 +63,7 @@ export function TarjetasSection({
         </div>
         <button
           type="button"
-          onClick={() => setModalOpen(true)}
+          onClick={openModalCrear}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-600 bg-zinc-900 text-white font-semibold text-sm hover:bg-zinc-800 hover:border-zinc-500 transition-colors"
         >
           <CreditCard size={16} />
@@ -68,10 +84,11 @@ export function TarjetasSection({
                   key={tarjeta.id}
                   tarjeta={tarjeta}
                   deudaEnCuotas={getDeudaTarjeta(tarjeta.id)}
-                  onMenu={() => {}}
+                  onEditar={openModalEditar}
+                  onEliminar={(t) => setTarjetaAEliminar(t)}
                 />
               ))}
-              <CardNuevaTarjeta onClick={() => setModalOpen(true)} />
+              <CardNuevaTarjeta onClick={openModalCrear} />
             </div>
           </div>
 
@@ -83,7 +100,7 @@ export function TarjetasSection({
           <p className="text-zinc-500 mb-4">No hay tarjetas ni cuotas registradas.</p>
           <button
             type="button"
-            onClick={() => setModalOpen(true)}
+            onClick={openModalCrear}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-zinc-600 bg-zinc-800 text-zinc-300 font-semibold hover:bg-zinc-700 hover:text-white transition-colors"
           >
             <CreditCard size={18} />
@@ -92,7 +109,18 @@ export function TarjetasSection({
         </div>
       )}
 
-      <ModalVincularTarjeta isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+      <ModalVincularTarjeta
+        isOpen={modalOpen}
+        onClose={closeModal}
+        tarjetaEditar={tarjetaAEditar}
+      />
+      {tarjetaAEliminar && (
+        <ModalConfirmarEliminarTarjeta
+          tarjetaNombre={tarjetaAEliminar.nombre}
+          tarjetaId={tarjetaAEliminar.id}
+          onClose={() => setTarjetaAEliminar(null)}
+        />
+      )}
 
       <style dangerouslySetInnerHTML={{ __html: '.hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }' }} />
     </div>

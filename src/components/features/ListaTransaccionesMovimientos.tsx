@@ -3,7 +3,10 @@
 import { useState, useMemo } from 'react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Search, Filter, UtensilsCrossed, ShoppingCart, Wallet, Car, Home, Zap, Heart, Film, Shirt, Package } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Search, Filter, UtensilsCrossed, ShoppingCart, Wallet, Car, Home, Zap, Heart, Film, Shirt, Package, Pencil, Trash2 } from 'lucide-react'
+import { ModalEditarTransaccion } from './ModalEditarTransaccion'
+import { ModalConfirmarEliminar } from './ModalConfirmarEliminar'
 import type { Transaccion } from '@/types'
 
 const CATEGORIA_ICON: Record<string, { icon: typeof UtensilsCrossed; color: string }> = {
@@ -45,6 +48,9 @@ function agruparPorFecha(transacciones: Transaccion[]) {
 export function ListaTransaccionesMovimientos({ transacciones }: { transacciones: Transaccion[] }) {
   const [busqueda, setBusqueda] = useState('')
   const [mostrarFiltros, setMostrarFiltros] = useState(false)
+  const [transaccionAEditar, setTransaccionAEditar] = useState<Transaccion | null>(null)
+  const [transaccionAEliminar, setTransaccionAEliminar] = useState<Transaccion | null>(null)
+  const router = useRouter()
 
   const filtradas = useMemo(() => {
     if (!busqueda.trim()) return transacciones
@@ -116,6 +122,7 @@ export function ListaTransaccionesMovimientos({ transacciones }: { transacciones
                   {items.map((t) => {
                     const { icon: Icon, color } = getIconForCategoria(t.categoria)
                     const categoriaTexto = t.categoria.replace(/^[\p{Emoji_Presentation}\p{Emoji}\uFE0F]\s*/u, '').trim()
+                    const concepto = t.descripcion || categoriaTexto
                     return (
                       <div
                         key={t.id}
@@ -128,7 +135,7 @@ export function ListaTransaccionesMovimientos({ transacciones }: { transacciones
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-white truncate">
-                            {t.descripcion || categoriaTexto}
+                            {concepto}
                           </p>
                           <p className="text-sm text-zinc-500">{categoriaTexto}</p>
                         </div>
@@ -139,6 +146,24 @@ export function ListaTransaccionesMovimientos({ transacciones }: { transacciones
                         >
                           {t.tipo === 'ingreso' ? '+ ' : '- '}$ {formatearMonto(Number(t.monto))}
                         </span>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => setTransaccionAEditar(t)}
+                            className="w-9 h-9 rounded-lg flex items-center justify-center text-zinc-400 hover:bg-zinc-700 hover:text-teal-400 transition-colors"
+                            title="Editar"
+                          >
+                            <Pencil size={16} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setTransaccionAEliminar(t)}
+                            className="w-9 h-9 rounded-lg flex items-center justify-center text-zinc-400 hover:bg-zinc-700 hover:text-rose-400 transition-colors"
+                            title="Eliminar"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </div>
                     )
                   })}
@@ -148,6 +173,21 @@ export function ListaTransaccionesMovimientos({ transacciones }: { transacciones
           })
         )}
       </div>
+
+      {transaccionAEditar && (
+        <ModalEditarTransaccion
+          transaccion={transaccionAEditar}
+          onClose={() => setTransaccionAEditar(null)}
+          onSuccess={() => router.refresh()}
+        />
+      )}
+      {transaccionAEliminar && (
+        <ModalConfirmarEliminar
+          transaccionId={transaccionAEliminar.id}
+          concepto={transaccionAEliminar.descripcion || transaccionAEliminar.categoria}
+          onClose={() => setTransaccionAEliminar(null)}
+        />
+      )}
     </div>
   )
 }

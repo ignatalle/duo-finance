@@ -15,6 +15,7 @@ export interface Transaccion {
   cuota_total: number | null
   vencimiento_en: string | null
   tarjeta_id: string | null
+  es_prestamo?: boolean
   created_at: string
 }
 

@@ -50,6 +50,7 @@ export default async function EspacioCompartidoPage(props: { searchParams: Promi
             usuarioId={user.id}
             parejaId={perfil.pareja_id}
             nombrePareja={nombrePareja}
+            codigoPareja={codigoPareja}
           />
         )}
       </div>

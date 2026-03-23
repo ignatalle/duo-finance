@@ -31,7 +31,10 @@ export default async function LoginPage(props: { searchParams: Promise<{ message
 
     const supabase = await createClient()
     const { error } = await supabase.auth.signUp({ email, password })
-    if (error) return redirect('/login?message=Error al crear cuenta')
+    if (error) {
+      const msg = encodeURIComponent(error.message || 'Error al crear cuenta')
+      return redirect(`/login?message=${msg}`)
+    }
     return redirect('/dashboard')
   }
 

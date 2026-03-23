@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { X, Loader2 } from 'lucide-react'
-import { crearTarjeta } from '@/app/actions/tarjetas'
+import { crearTarjeta, editarTarjeta, type Tarjeta } from '@/app/actions/tarjetas'
 
 const BANCOS = ['Galicia', 'Santander', 'Nación', 'ICBC', 'BBVA', 'HSBC', 'Otro']
 const ESTILOS = [
@@ -15,9 +15,10 @@ const ESTILOS = [
 interface ModalVincularTarjetaProps {
   isOpen: boolean
   onClose: () => void
+  tarjetaEditar?: Tarjeta | null
 }
 
-export function ModalVincularTarjeta({ isOpen, onClose }: ModalVincularTarjetaProps) {
+export function ModalVincularTarjeta({ isOpen, onClose, tarjetaEditar }: ModalVincularTarjetaProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [nombre, setNombre] = useState('')
@@ -26,6 +27,26 @@ export function ModalVincularTarjeta({ isOpen, onClose }: ModalVincularTarjetaPr
   const [cierreDia, setCierreDia] = useState(15)
   const [vencimientoDia, setVencimientoDia] = useState(20)
   const [estilo, setEstilo] = useState('orange')
+
+  const esEdicion = !!tarjetaEditar
+
+  useEffect(() => {
+    if (isOpen && tarjetaEditar) {
+      setNombre(tarjetaEditar.nombre)
+      setBanco(tarjetaEditar.banco || '')
+      setUltimosDigitos(tarjetaEditar.ultimos_digitos != null ? String(tarjetaEditar.ultimos_digitos) : '')
+      setCierreDia(tarjetaEditar.cierre_dia)
+      setVencimientoDia(tarjetaEditar.vencimiento_dia)
+      setEstilo(tarjetaEditar.estilo || 'orange')
+    } else if (isOpen && !tarjetaEditar) {
+      setNombre('')
+      setBanco('')
+      setUltimosDigitos('')
+      setCierreDia(15)
+      setVencimientoDia(20)
+      setEstilo('orange')
+    }
+  }, [isOpen, tarjetaEditar])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,7 +59,12 @@ export function ModalVincularTarjeta({ isOpen, onClose }: ModalVincularTarjetaPr
     formData.set('cierre_dia', String(cierreDia))
     formData.set('vencimiento_dia', String(vencimientoDia))
     formData.set('estilo', estilo)
-    const result = await crearTarjeta(formData)
+    if (esEdicion && tarjetaEditar) formData.set('id', tarjetaEditar.id)
+
+    const result = esEdicion
+      ? await editarTarjeta(formData)
+      : await crearTarjeta(formData)
+
     setLoading(false)
     if (result.success) {
       router.refresh()
@@ -50,7 +76,7 @@ export function ModalVincularTarjeta({ isOpen, onClose }: ModalVincularTarjetaPr
       setVencimientoDia(20)
       setEstilo('orange')
     } else {
-      alert(result.error || 'No se pudo crear la tarjeta')
+      alert(result.error || (esEdicion ? 'No se pudo actualizar' : 'No se pudo crear la tarjeta'))
     }
   }
 
@@ -61,7 +87,7 @@ export function ModalVincularTarjeta({ isOpen, onClose }: ModalVincularTarjetaPr
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" onClick={onClose} />
       <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl z-50 p-6 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-bold text-white">Vincular Tarjeta</h3>
+          <h3 className="text-lg font-bold text-white">{esEdicion ? 'Editar Tarjeta' : 'Vincular Tarjeta'}</h3>
           <button
             type="button"
             onClick={onClose}
@@ -170,7 +196,7 @@ export function ModalVincularTarjeta({ isOpen, onClose }: ModalVincularTarjetaPr
               disabled={loading}
               className="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {loading ? <Loader2 size={18} className="animate-spin" /> : 'Vincular'}
+              {loading ? <Loader2 size={18} className="animate-spin" /> : esEdicion ? 'Guardar cambios' : 'Vincular'}
             </button>
           </div>
         </form>

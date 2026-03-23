@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation'
 import { useSearchParams } from 'next/navigation'
 import { useDashboardModal } from '@/components/dashboard/DashboardModalContext'
-import { CalendarDays, Plus } from 'lucide-react'
+import { CalendarDays, ArrowUpRight, ArrowDownRight } from 'lucide-react'
 import { BotonExportar } from './BotonExportar'
 
 function diasParaFinDeMes(): number {
@@ -52,13 +52,22 @@ export function MovimientosHeader({ mesParam }: { mesParam: string }) {
           </p>
         </div>
         {modal && (
-          <button
-            type="button"
-            onClick={() => modal.openGasto()}
-            className="flex items-center gap-2 bg-teal-500 hover:bg-teal-400 text-zinc-900 font-bold px-5 py-2.5 rounded-xl transition-colors shadow-lg shadow-teal-500/20"
-          >
-            <Plus size={20} strokeWidth={2.5} /> Nuevo Movimiento
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => modal.openGasto()}
+              className="flex items-center gap-2 bg-rose-500/90 hover:bg-rose-500 text-white font-bold px-4 py-2.5 rounded-xl transition-colors shadow-lg shadow-rose-500/20"
+            >
+              <ArrowUpRight size={18} strokeWidth={2.5} /> Nuevo Gasto
+            </button>
+            <button
+              type="button"
+              onClick={() => modal.openIngreso()}
+              className="flex items-center gap-2 bg-teal-500 hover:bg-teal-400 text-zinc-900 font-bold px-4 py-2.5 rounded-xl transition-colors shadow-lg shadow-teal-500/20"
+            >
+              <ArrowDownRight size={18} strokeWidth={2.5} /> Nuevo Ingreso
+            </button>
+          </div>
         )}
       </div>
     </div>

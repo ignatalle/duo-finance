@@ -89,7 +89,10 @@ export async function generarCodigoVinculacion(): Promise<string> {
 
   if (errorPareja || !nuevaPareja) {
     console.error('Error creando pareja:', errorPareja)
-    throw new Error('No se pudo generar el código')
+    const msg = errorPareja?.message?.includes('policy') || errorPareja?.code === '42501'
+      ? 'Permisos insuficientes. Ejecutá la migración 20260323100000_parejas_rls_policies.sql en Supabase.'
+      : 'No se pudo generar el código'
+    throw new Error(msg)
   }
 
   const { error: errorPerfil } = await supabase

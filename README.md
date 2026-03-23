@@ -1,36 +1,147 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Duo Finance
 
-## Getting Started
+App de finanzas personales en pareja. Next.js, Supabase, Tailwind.
 
-First, run the development server:
+---
+
+## Inicio rápido
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Crear `.env.local` con:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+NEXT_PUBLIC_SUPABASE_URL=tu_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_anon_key
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Abrir [http://localhost:3000](http://localhost:3000).
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Estado del proyecto
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Lo que tenemos
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Módulo | Funcionalidad |
+|--------|---------------|
+| **Auth** | Login, registro, sesión persistente |
+| **Dashboard** | Saldos, gráfico (línea/velas/área), salud, selector de mes |
+| **Movimientos** | Listado por fecha, búsqueda, exportar CSV |
+| **Gastos y presupuestos** | Ingresos/fijos, límites por categoría, resumen |
+| **Tarjetas y cuotas** | Vincular tarjetas, cuotas pendientes, libertad de deuda |
+| **Planificación** | Vista del próximo mes, margen libre |
+| **Finanzas en pareja** | Código de vinculación, resumen conjunto |
+| **Formulario** | Gasto/Ingreso, cuotas, USD→ARS, fecha, propiedad |
+| **FAB** | Asistente IA, escanear, gasto, ingreso |
 
-## Deploy on Vercel
+### Lo que falta por hacer
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Alta prioridad**
+- Carga Mágica real (IA para parsear "Gasté 15m en nafta")
+- Escáner real (OCR de tickets)
+- Editar/eliminar en lista de Movimientos
+- Asociar tarjeta al registrar gasto en cuotas
+- Menú de tarjetas (editar, eliminar)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Prioridad media**
+- Filtros en Movimientos (tipo, categoría)
+- Asistente IA conectado a API real
+- Reportes en PDF
+- Metas de ahorro (UI)
+
+**Prioridad baja**
+- Editar/eliminar tarjeta
+- Migración `20260322100000` si no está aplicada
+
+### Mejoras futuras
+
+- Modo claro/oscuro
+- Notificaciones (vencimientos, cuotas)
+- Recordatorios
+- Múltiples monedas
+- Categorías personalizadas
+- Integración bancaria / Open Banking
+- Categorización automática con IA
+- PWA, tests e2e
+
+---
+
+## Supabase
+
+### Tablas necesarias
+
+| Tabla | Uso |
+|-------|-----|
+| `auth.users` | Supabase Auth |
+| `parejas` | Vinculación, códigos |
+| `perfiles` | Usuario ↔ pareja |
+| `transacciones` | Ingresos, gastos, cuotas |
+| `tarjetas` | Tarjetas de crédito |
+| `presupuestos_categoria` | Límites por categoría |
+| `metas` | Metas de ahorro |
+
+### Migraciones
+
+1. Crear tablas base: `parejas`, `perfiles`, `transacciones` (+ trigger para crear perfil al registrarse)
+2. Ejecutar `supabase/migrations/20260322000000_add_tarjetas_presupuestos_metas.sql`
+3. Ejecutar `supabase/migrations/20260322100000_tarjetas_estilo.sql`
+4. Ejecutar `supabase/migrations/20260323000000_add_es_prestamo.sql`
+5. Ejecutar `supabase/migrations/20260323100000_parejas_rls_policies.sql` (para generar código de vinculación)
+6. Ejecutar `supabase/migrations/20260323200000_transacciones_tarjeta_on_delete_set_null.sql` (al eliminar tarjeta, se eliminan sus transacciones)
+7. Si aplica: `supabase-add-codigo.sql` (columna `codigo` en parejas)
+
+### Comando
+
+```bash
+supabase db push
+```
+
+O ejecutar los SQL en el **SQL Editor** del Dashboard de Supabase.
+
+### Documentación completa
+
+Ver **[docs/SUPABASE_REQUERIDO.md](./docs/SUPABASE_REQUERIDO.md)** para:
+
+- Schema SQL de cada tabla
+- Trigger de perfiles
+- Tablas para futuras actualizaciones (recordatorios, escaneos, preferencias, etc.)
+- Checklist de despliegue
+
+---
+
+## Estructura
+
+```
+src/
+├── app/
+│   ├── (auth)/login/
+│   ├── dashboard/
+│   │   ├── gastos/
+│   │   ├── movimientos/
+│   │   ├── tarjetas/
+│   │   ├── planificacion/
+│   │   ├── espacio-compartido/
+│   │   ├── reportes/
+│   │   └── configuracion/
+│   └── actions/         # Server actions
+├── components/
+│   ├── dashboard/
+│   ├── features/
+│   │   └── tarjetas/
+│   └── ui/
+└── lib/
+```
+
+---
+
+## Stack
+
+- **Next.js 15** (App Router)
+- **Supabase** (Auth, PostgreSQL)
+- **Tailwind CSS**
+- **date-fns**
+- **Lucide Icons**

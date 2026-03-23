@@ -3,8 +3,10 @@
 import { useState, useTransition, useEffect, useRef } from 'react'
 import { registrarTransaccion } from '@/app/actions/transacciones'
 import { useDashboardModal } from '@/components/dashboard/DashboardModalContext'
-import { Plus, X, Sparkles, Loader2, ShoppingBag, Utensils, Car, Home, Zap, HeartPulse, Film, Shirt, DollarSign, Package, Calendar, User, Users, Camera, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, X, Sparkles, Loader2, ShoppingBag, Utensils, Car, Home, Zap, HeartPulse, Film, Shirt, DollarSign, Package, Calendar, User, Users, Camera, ChevronLeft, ChevronRight, CreditCard, Banknote, FileText } from 'lucide-react'
 import { format } from 'date-fns'
+import { obtenerTarjetas } from '@/app/actions/tarjetas'
+import type { Tarjeta } from '@/app/actions/tarjetas'
 
 const CATEGORIAS = [
   '🛒 Supermercado', '🍔 Comida / Delivery', '🚗 Transporte / Nafta',
@@ -46,27 +48,44 @@ export function FormularioTransaccion({ isOpen: controlledOpen, onOpenChange, in
   const [monto, setMonto] = useState('')
   const [descripcion, setDescripcion] = useState('')
   const [esCompartido, setEsCompartido] = useState(false)
+  const [tipoGasto, setTipoGasto] = useState<'variable' | 'fijo'>('variable')
+  const [tarjetaId, setTarjetaId] = useState<string>('')
+  const [cuotas, setCuotas] = useState(1)
+  const [esPrestamo, setEsPrestamo] = useState(false)
+  const [tarjetas, setTarjetas] = useState<Tarjeta[]>([])
   const [aiText, setAiText] = useState('')
   const [isAiLoading, setIsAiLoading] = useState(false)
   const [fecha, setFecha] = useState(format(new Date(), 'yyyy-MM-dd'))
   const carouselRef = useRef<HTMLDivElement>(null)
   const modal = useDashboardModal()
 
+  useEffect(() => {
+    if (isOpen) {
+      obtenerTarjetas().then((res) => {
+        const data = res.data || []
+        setTarjetas(data)
+        setTarjetaId((prev) => (prev && !data.some((t) => t.id === prev)) ? '' : prev)
+      })
+    }
+  }, [isOpen])
+
   const handleSubmit = async (formData: FormData) => {
     startTransition(async () => {
-      // Inyectamos TODOS los valores del estado de React al FormData
       formData.set('tipo', tipo)
       formData.set('categoria', categoriaSel)
-      formData.set('descripcion', descripcion) // 🔥 FIX CRÍTICO: Antes se perdía el concepto
-      
+      formData.set('descripcion', descripcion)
       if (esCompartido) formData.set('es_compartido', 'on')
       if (fecha) formData.set('fecha', fecha)
-      
-      // Valores por defecto
-      formData.set('moneda', 'ARS') // Próximamente lo haremos dinámico
+      formData.set('moneda', 'ARS')
       formData.set('monto_original', monto)
       formData.set('estado', 'pagado')
-      formData.set('tipo_gasto', 'variable')
+      formData.set('tipo_gasto', tipoGasto)
+      if (tarjetaId) formData.set('tarjeta_id', tarjetaId)
+      if (cuotas > 1 && tipo === 'gasto') {
+        formData.set('cuota_actual', '1')
+        formData.set('cuota_total', String(cuotas))
+      }
+      if (esPrestamo) formData.set('es_prestamo', 'on')
 
       const result = await registrarTransaccion(formData)
       if (result.success) {
@@ -75,6 +94,10 @@ export function FormularioTransaccion({ isOpen: controlledOpen, onOpenChange, in
         setDescripcion('')
         setAiText('')
         setFecha(format(new Date(), 'yyyy-MM-dd'))
+        setTarjetaId('')
+        setCuotas(1)
+        setEsPrestamo(false)
+        setTipoGasto('variable')
       } else {
         alert(result.error || 'Hubo un error al guardar')
       }
@@ -122,7 +145,7 @@ export function FormularioTransaccion({ isOpen: controlledOpen, onOpenChange, in
             onClick={() => setIsOpen(false)}
           />
           
-          <div className="relative w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-200 z-10 border border-slate-100">
+          <div className="relative w-full max-w-sm max-h-[90vh] overflow-y-auto bg-white rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-200 z-10 border border-slate-100">
             
             <div className="relative flex justify-center items-center mb-5">
               <h2 className="text-xl font-bold text-slate-800 tracking-tight">
@@ -246,6 +269,102 @@ export function FormularioTransaccion({ isOpen: controlledOpen, onOpenChange, in
                     <ChevronRight size={18} />
                   </button>
                 </div>
+              </div>
+
+              {/* Tipo Variable/Fijo - solo gastos */}
+              {tipo === 'gasto' && (
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 block">Tipo de gasto</label>
+                  <div className="flex bg-slate-100 p-1 rounded-xl">
+                    <button
+                      type="button"
+                      onClick={() => setTipoGasto('variable')}
+                      className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${tipoGasto === 'variable' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400'}`}
+                    >
+                      Variable
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTipoGasto('fijo')}
+                      className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${tipoGasto === 'fijo' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400'}`}
+                    >
+                      Fijo
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Tarjeta y Cuotas - solo gastos */}
+              {tipo === 'gasto' && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 block">¿En tarjeta?</label>
+                    <div className="flex bg-slate-100 p-1 rounded-xl">
+                      <button
+                        type="button"
+                        onClick={() => { setTarjetaId(''); setCuotas(1) }}
+                        className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-2 text-sm font-bold transition-all ${!tarjetaId ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400'}`}
+                      >
+                        <Banknote size={16} /> Efectivo
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => tarjetas.length > 0 && setTarjetaId(tarjetas[0].id)}
+                        className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-2 text-sm font-bold transition-all ${tarjetaId ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400'}`}
+                      >
+                        <CreditCard size={16} /> Tarjeta
+                      </button>
+                    </div>
+                  </div>
+                  {tarjetaId && tarjetas.length > 0 && (
+                    <>
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">Tarjeta</label>
+                        <select
+                          value={tarjetaId}
+                          onChange={(e) => setTarjetaId(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 font-medium focus:ring-2 focus:ring-slate-800 focus:border-slate-800 outline-none"
+                        >
+                          {tarjetas.map((t) => (
+                            <option key={t.id} value={t.id}>
+                              {t.nombre} {t.ultimos_digitos ? `****${t.ultimos_digitos}` : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">Cuotas</label>
+                        <select
+                          value={cuotas}
+                          onChange={(e) => setCuotas(parseInt(e.target.value))}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 font-medium focus:ring-2 focus:ring-slate-800 focus:border-slate-800 outline-none"
+                        >
+                          {[1, 2, 3, 6, 9, 12, 18, 24].map((n) => (
+                            <option key={n} value={n}>{n === 1 ? '1 cuota (contado)' : `${n} cuotas`}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </>
+                  )}
+                  {tarjetaId && tarjetas.length === 0 && (
+                    <p className="text-xs text-amber-600">No tenés tarjetas vinculadas. Andá a Tarjetas para agregar una.</p>
+                  )}
+                </div>
+              )}
+
+              {/* Es préstamo */}
+              <div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={esPrestamo}
+                    onChange={(e) => setEsPrestamo(e.target.checked)}
+                    className="w-4 h-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                  />
+                  <span className="text-sm font-medium text-slate-700 flex items-center gap-1.5">
+                    <FileText size={14} /> Es préstamo o financiación
+                  </span>
+                </label>
               </div>
 
               {/* Fecha y Propiedad (íconos persona/grupo) */}

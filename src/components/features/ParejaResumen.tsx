@@ -4,6 +4,7 @@ import { ProgressBar } from '@/components/ui/ProgressBar'
 import { calcularBalancePareja } from '@/lib/calculos'
 import { HeartHandshake, ArrowRightLeft, Users } from 'lucide-react'
 import { format } from 'date-fns'
+import { CodigoParaCompartir } from './CodigoParaCompartir'
 import { es } from 'date-fns/locale'
 
 export async function ParejaResumen({
@@ -12,12 +13,14 @@ export async function ParejaResumen({
   usuarioId,
   parejaId,
   nombrePareja,
+  codigoPareja,
 }: {
   inicioMes: string
   finMes: string
   usuarioId: string
   parejaId: string
   nombrePareja: string
+  codigoPareja?: string | null
 }) {
   const supabase = await createClient()
 
@@ -56,6 +59,8 @@ export async function ParejaResumen({
           <p className="text-zinc-400 text-sm">Gastos a medias con {nombrePareja}.</p>
         </div>
       </div>
+
+      {codigoPareja && <CodigoParaCompartir codigo={codigoPareja} />}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="md:col-span-2">

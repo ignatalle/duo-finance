@@ -17,8 +17,9 @@ export function ModuloPareja(props: ModuloParejaProps) {
   const [copiado, setCopiado] = useState(false)
   const [errorMsj, setErrorMsj] = useState<string | null>(null)
 
-  // Si ya tiene pareja vinculada, no mostramos nada (gestión desde la hamburguesa)
-  if (parejaId) return null
+  // Si ya tiene pareja vinculada, ocultar... EXCEPTO si acabamos de generar el código (miCodigo en state)
+  // para que pueda copiarlo antes de que desaparezca
+  if (parejaId && !miCodigo) return null
 
   const handleGenerarCodigo = async () => {
     try {
@@ -101,16 +102,22 @@ export function ModuloPareja(props: ModuloParejaProps) {
 
         {/* SECCIÓN 2: Generar mi código */}
         {!miCodigo ? (
-          <button 
-            type="button"
-            onClick={handleGenerarCodigo}
-            className="w-full bg-slate-50 hover:bg-slate-100 text-indigo-600 border border-slate-200 py-3 rounded-2xl font-bold text-sm transition-colors flex items-center justify-center gap-2"
-          >
-            <Link2 size={16} /> Generar mi código
-          </button>
+          <div className="space-y-2">
+            <p className="text-xs text-slate-500">
+              Al generar el código, vas a crear un espacio compartido y vas a quedar vinculado como primer miembro. Luego compartí el código con tu pareja para que se una.
+            </p>
+            <button 
+              type="button"
+              onClick={handleGenerarCodigo}
+              className="w-full bg-slate-50 hover:bg-slate-100 text-indigo-600 border border-slate-200 py-3 rounded-2xl font-bold text-sm transition-colors flex items-center justify-center gap-2"
+            >
+              <Link2 size={16} /> Generar mi código
+            </button>
+          </div>
         ) : (
-          <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 text-center">
-            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Tu código de invitación</p>
+          <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 text-center space-y-2">
+            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Tu código de invitación</p>
+            <p className="text-xs text-slate-600">Ya estás vinculado a este espacio. Compartí el código con tu pareja:</p>
             <div className="flex items-center justify-center gap-3 mt-2">
               <span className="text-2xl font-black text-emerald-700 tracking-[0.2em]">{miCodigo}</span>
               <button 
