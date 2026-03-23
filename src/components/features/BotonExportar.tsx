@@ -59,7 +59,7 @@ export function BotonExportar({ mesActual }: { mesActual: string }) {
       <button 
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors shadow-sm flex items-center justify-center"
+        className="p-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-zinc-400 hover:text-teal-400 hover:border-teal-500/50 transition-colors flex items-center justify-center"
         title="Exportar datos"
       >
         <Download size={18} />
@@ -68,25 +68,25 @@ export function BotonExportar({ mesActual }: { mesActual: string }) {
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}></div>
-          <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-            <div className="px-4 py-3 border-b border-slate-50 bg-slate-50/50">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Exportar a Excel</span>
+          <div className="absolute right-0 mt-2 w-56 bg-zinc-800 border border-zinc-700 rounded-xl shadow-xl z-50 overflow-hidden">
+            <div className="px-4 py-3 border-b border-zinc-700">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Exportar a Excel</span>
             </div>
             <button 
               type="button"
               onClick={() => descargarCSV('mes')}
               disabled={loading}
-              className="w-full text-left px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors flex items-center gap-3"
+              className="w-full text-left px-4 py-3 text-sm font-semibold text-zinc-300 hover:bg-zinc-700 transition-colors flex items-center gap-3"
             >
-              <Calendar size={16} className="text-indigo-500" /> Solo {month}/{year}
+              <Calendar size={16} className="text-teal-400" /> Solo {month}/{year}
             </button>
             <button 
               type="button"
               onClick={() => descargarCSV('anio')}
               disabled={loading}
-              className="w-full text-left px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors flex items-center gap-3 border-t border-slate-50"
+              className="w-full text-left px-4 py-3 text-sm font-semibold text-zinc-300 hover:bg-zinc-700 transition-colors flex items-center gap-3 border-t border-zinc-700"
             >
-              <FileSpreadsheet size={16} className="text-emerald-500" /> Todo el año {year}
+              <FileSpreadsheet size={16} className="text-teal-400" /> Todo el año {year}
             </button>
           </div>
         </>

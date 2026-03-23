@@ -12,6 +12,7 @@ import type { ReactNode } from 'react'
 export function DashboardShell({ children }: { children: ReactNode }) {
   const [modalTipo, setModalTipo] = useState<'gasto' | 'ingreso' | null>(null)
   const [escannerOpen, setEscannerOpen] = useState(false)
+  const [asistenteOpen, setAsistenteOpen] = useState(false)
 
   const modalValue = {
     openGasto: () => setModalTipo('gasto'),
@@ -27,13 +28,14 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         onEscanear={() => setEscannerOpen(true)}
         onGasto={() => setModalTipo('gasto')}
         onIngreso={() => setModalTipo('ingreso')}
+        onAsistente={() => setAsistenteOpen(true)}
       />
       <FormularioTransaccion
         isOpen={modalTipo !== null}
         onOpenChange={(open) => !open && setModalTipo(null)}
         initialTipo={modalTipo ?? 'gasto'}
       />
-      <AsistenteIA />
+      <AsistenteIA isOpen={asistenteOpen} onClose={() => setAsistenteOpen(false)} />
       <ModalEscanner isOpen={escannerOpen} onClose={() => setEscannerOpen(false)} />
       </DashboardModalProvider>
     </ToastProvider>

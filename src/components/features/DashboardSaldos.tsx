@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { obtenerGastosFijosPendientes } from '@/app/actions/transacciones'
 import { calcularSaldoDisponibleReal } from '@/lib/calculos'
-import { Card } from '@/components/ui/Card'
 import { Wallet, AlertTriangle } from 'lucide-react'
 
 export async function DashboardSaldos({ inicioMes, finMes, mesRef, usuarioId }: {
@@ -29,29 +28,27 @@ export async function DashboardSaldos({ inicioMes, finMes, mesRef, usuarioId }: 
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-slate-700/20 rounded-full blur-3xl -mr-10 -mt-10" />
-        <p className="text-slate-400 text-sm font-medium mb-1">Saldo Total Contable</p>
-        <h3 className="text-4xl font-bold text-white mb-2">
+      <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 relative overflow-hidden">
+        <p className="text-zinc-500 text-xs font-semibold uppercase tracking-wider mb-2">Saldo Total Contable</p>
+        <h3 className={`text-3xl font-bold mb-2 ${saldoTotalContable >= 0 ? 'text-white' : 'text-white'}`}>
           ${saldoTotalContable.toLocaleString('es-AR')}
         </h3>
-        <p className="text-xs text-slate-500 flex items-center gap-1">
+        <p className="text-xs text-zinc-500 flex items-center gap-1.5">
           <Wallet size={12} /> Suma de bancos y billeteras
         </p>
-      </Card>
+      </div>
 
-      <Card className="bg-gradient-to-br from-indigo-900/60 to-slate-900 border-indigo-500/40 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl -mr-10 -mt-10" />
-        <p className="text-indigo-300 text-sm font-medium mb-1 flex items-center gap-1">
-          Saldo Disponible REAL <AlertTriangle size={14} className="text-indigo-400" />
+      <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 relative overflow-hidden">
+        <p className="text-zinc-500 text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5">
+          Saldo Disponible Real <AlertTriangle size={12} className="text-blue-400" title="Info" />
         </p>
-        <h3 className="text-4xl font-bold text-indigo-400 mb-2">
+        <h3 className="text-3xl font-bold text-white mb-2">
           ${saldoDisponibleReal.toLocaleString('es-AR')}
         </h3>
-        <p className="text-xs text-indigo-300/80">
+        <p className="text-xs text-blue-400/90">
           Separamos ${pendientesFijos.toLocaleString('es-AR')} para los fijos que vencen pronto.
         </p>
-      </Card>
+      </div>
     </div>
   )
 }

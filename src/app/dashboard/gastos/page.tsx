@@ -1,12 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { SelectorMes } from '@/components/features/SelectorMes'
-import { Card } from '@/components/ui/Card'
-import { ProgressBar } from '@/components/ui/ProgressBar'
-import { obtenerGastosFijosPendientes, obtenerConsumoPorCategoria } from '@/app/actions/transacciones'
+import { Suspense } from 'react'
+import { PlanificacionHeader } from '@/components/features/PlanificacionHeader'
+import { PlanificacionFijos } from '@/components/features/PlanificacionFijos'
+import { PlanificacionVariables } from '@/components/features/PlanificacionVariables'
+import { GastosClient } from './GastosClient'
+import { obtenerConsumoPorCategoria } from '@/app/actions/transacciones'
 import { obtenerPresupuestos } from '@/app/actions/presupuestos'
-import { Calendar, PieChart, AlertTriangle, Check } from 'lucide-react'
-import { ListaGastosFijos } from './ListaGastosFijos'
 
 export default async function GastosPage(props: { searchParams: Promise<{ mes?: string }> }) {
   const supabase = await createClient()
@@ -23,80 +23,70 @@ export default async function GastosPage(props: { searchParams: Promise<{ mes?: 
     .from('transacciones')
     .select('*')
     .eq('usuario_id', user.id)
-    .eq('tipo', 'gasto')
     .gte('created_at', inicioMes)
     .lte('created_at', finMes)
-    .order('created_at', { ascending: false })
 
-  const { data: gastosFijos } = await obtenerGastosFijosPendientes(user.id, mesParam)
-  const { data: consumoPorCat } = await obtenerConsumoPorCategoria(user.id, mesParam)
+  const ingresos = (transacciones || []).filter((t) => t.tipo === 'ingreso')
+  const gastosFijos = (transacciones || []).filter((t) => t.tipo === 'gasto' && t.tipo_gasto === 'fijo')
+
+  const totalIngresos = ingresos.reduce((a, t) => a + t.monto, 0)
+  const totalGastosFijos = gastosFijos.reduce((a, t) => a + t.monto, 0)
+  const totalFijosNeto = totalIngresos - totalGastosFijos
+
   const { data: presupuestos } = await obtenerPresupuestos(mesParam)
-
-  const gastosFijosLista = (transacciones || []).filter((t) => t.tipo_gasto === 'fijo')
-  const categoriasConPresupuesto = presupuestos || []
+  const { data: consumoPorCat } = await obtenerConsumoPorCategoria(user.id, mesParam)
+  const consumoPorCategoria = consumoPorCat || {}
+  const totalPresupuestado = (presupuestos || []).reduce((a, p) => a + p.limite_mensual, 0)
+  const margenAhorro = totalFijosNeto - totalPresupuestado
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-white">Gastos del Mes</h2>
-          <p className="text-zinc-400 text-sm">Controlá tus compromisos y presupuestos.</p>
-        </div>
-        <SelectorMes />
-      </div>
+      <Suspense fallback={null}>
+        <GastosClient mesParam={mesParam} presupuestos={(presupuestos || []).map((p) => ({ categoria: p.categoria, limite_mensual: p.limite_mensual }))} />
+      </Suspense>
+      <PlanificacionHeader mesParam={mesParam} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Calendar size={18} className="text-indigo-400" /> Fijos
-              <span className="text-xs font-normal text-zinc-400">(Servicios, suscripciones)</span>
-            </h3>
-          </div>
-          <ListaGastosFijos gastos={gastosFijosLista} usuarioId={user.id} />
-        </Card>
+        <PlanificacionFijos
+          ingresos={ingresos}
+          gastosFijos={gastosFijos}
+          usuarioId={user.id}
+        />
+        <PlanificacionVariables
+          presupuestos={presupuestos || []}
+          consumoPorCategoria={consumoPorCategoria}
+          mesParam={mesParam}
+        />
+      </div>
 
-        <Card>
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-              <PieChart size={18} className="text-fuchsia-400" /> Variables
-              <span className="text-xs font-normal text-zinc-400">(Presupuestos)</span>
-            </h3>
+      {/* Barra resumen inferior */}
+      <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">
+              Total fijos (neto)
+            </p>
+            <p className={`text-2xl font-bold ${totalFijosNeto >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+              $ {totalFijosNeto.toLocaleString('es-AR')}
+            </p>
           </div>
-          <div className="space-y-6">
-            {categoriasConPresupuesto.length === 0 ? (
-              <p className="text-zinc-500 text-sm">Sin presupuestos configurados. Agregá límites por categoría.</p>
-            ) : (
-              categoriasConPresupuesto.map((p) => {
-                const consumido = consumoPorCat[p.categoria] || 0
-                const porcentaje = p.limite_mensual > 0 ? (consumido / p.limite_mensual) * 100 : 0
-                const isWarning = porcentaje > 85
-                return (
-                  <div key={p.id} className="bg-zinc-900/30 p-4 rounded-xl border border-zinc-800">
-                    <div className="flex justify-between items-center mb-2">
-                      <p className="text-sm font-medium text-zinc-200">{p.categoria}</p>
-                      <p className="text-sm font-bold text-white">
-                        ${consumido.toLocaleString('es-AR')}{' '}
-                        <span className="text-zinc-500 font-normal">/ ${p.limite_mensual.toLocaleString('es-AR')}</span>
-                      </p>
-                    </div>
-                    <ProgressBar
-                      current={consumido}
-                      max={p.limite_mensual}
-                      colorClass={isWarning ? 'bg-rose-500' : 'bg-fuchsia-500'}
-                      heightClass="h-2.5"
-                    />
-                    {isWarning && (
-                      <p className="text-xs text-rose-400 mt-2 flex items-center gap-1 font-medium">
-                        <AlertTriangle size={12} /> Estás llegando al límite mensual
-                      </p>
-                    )}
-                  </div>
-                )
-              })
-            )}
+          <div>
+            <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">
+              Total presupuestado
+            </p>
+            <p className="text-2xl font-bold text-white">
+              $ {totalPresupuestado.toLocaleString('es-AR')}
+            </p>
           </div>
-        </Card>
+          <div>
+            <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">
+              Margen de ahorro
+            </p>
+            <p className={`text-2xl font-bold ${margenAhorro >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
+              $ {margenAhorro.toLocaleString('es-AR')}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   )

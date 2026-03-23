@@ -10,6 +10,9 @@ export interface Tarjeta {
   nombre: string
   cierre_dia: number
   vencimiento_dia: number
+  banco?: string | null
+  ultimos_digitos?: number | null
+  estilo?: string | null
   created_at: string
 }
 
@@ -41,6 +44,9 @@ export async function crearTarjeta(formData: FormData) {
   const nombre = formData.get('nombre') as string
   const cierreDia = parseInt(formData.get('cierre_dia') as string) || 15
   const vencimientoDia = parseInt(formData.get('vencimiento_dia') as string) || 20
+  const banco = (formData.get('banco') as string)?.trim() || null
+  const ultimosDigitos = formData.get('ultimos_digitos') ? parseInt(formData.get('ultimos_digitos') as string) : null
+  const estilo = (formData.get('estilo') as string) || 'orange'
 
   if (!nombre?.trim()) return { success: false, error: 'El nombre es obligatorio' }
   if (cierreDia < 1 || cierreDia > 28) return { success: false, error: 'Día de cierre debe ser 1-28' }
@@ -54,6 +60,9 @@ export async function crearTarjeta(formData: FormData) {
       nombre: nombre.trim(),
       cierre_dia: cierreDia,
       vencimiento_dia: vencimientoDia,
+      banco: banco,
+      ultimos_digitos: ultimosDigitos && ultimosDigitos >= 0 && ultimosDigitos <= 9999 ? ultimosDigitos : null,
+      estilo: ['orange', 'dark', 'blue'].includes(estilo) ? estilo : 'orange',
     })
 
   if (error) {
@@ -75,6 +84,9 @@ export async function editarTarjeta(formData: FormData) {
   const nombre = formData.get('nombre') as string
   const cierreDia = parseInt(formData.get('cierre_dia') as string) || 15
   const vencimientoDia = parseInt(formData.get('vencimiento_dia') as string) || 20
+  const banco = (formData.get('banco') as string)?.trim() || null
+  const ultimosDigitos = formData.get('ultimos_digitos') ? parseInt(formData.get('ultimos_digitos') as string) : null
+  const estilo = (formData.get('estilo') as string) || 'orange'
 
   if (!id || !nombre?.trim()) return { success: false, error: 'Datos inválidos' }
 
@@ -84,6 +96,9 @@ export async function editarTarjeta(formData: FormData) {
       nombre: nombre.trim(),
       cierre_dia: cierreDia,
       vencimiento_dia: vencimientoDia,
+      banco: banco,
+      ultimos_digitos: ultimosDigitos && ultimosDigitos >= 0 && ultimosDigitos <= 9999 ? ultimosDigitos : null,
+      estilo: ['orange', 'dark', 'blue'].includes(estilo) ? estilo : 'orange',
     })
     .eq('id', id)
     .eq('usuario_id', user.id)

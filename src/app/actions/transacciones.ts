@@ -52,6 +52,9 @@ export async function registrarTransaccion(formData: FormData) {
   const vencimientoEn = formData.get('vencimiento_en') ? (formData.get('vencimiento_en') as string) : null
   const tarjetaId = formData.get('tarjeta_id') ? (formData.get('tarjeta_id') as string) : null
 
+  const fechaStr = formData.get('fecha') as string | null
+  const created_at = fechaStr ? new Date(fechaStr + 'T12:00:00').toISOString() : undefined
+
   const datosBase = {
     usuario_id: user.id,
     pareja_id: perfil?.pareja_id || null,
@@ -64,6 +67,7 @@ export async function registrarTransaccion(formData: FormData) {
     tipo_gasto: tipo === 'gasto' ? (formData.get('tipo_gasto') as string) : null,
     vencimiento_en: vencimientoEn || null,
     tarjeta_id: tarjetaId || null,
+    ...(created_at && { created_at }),
   }
 
   // LOGICA DE CUOTAS ARREGLADA

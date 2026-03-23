@@ -8,8 +8,7 @@ interface Mensaje {
   text: string
 }
 
-export function AsistenteIA() {
-  const [open, setOpen] = useState(false)
+export function AsistenteIA({ isOpen = false, onClose }: { isOpen?: boolean; onClose?: () => void }) {
   const [input, setInput] = useState('')
   const [mensajes, setMensajes] = useState<Mensaje[]>([
     { role: 'system', text: 'Hola. Soy tu asistente financiero. Puedo registrar gastos complejos, proyectar cuotas o analizar tu mes.' },
@@ -44,22 +43,14 @@ export function AsistenteIA() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="fixed bottom-24 right-8 z-40 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:scale-105 flex items-center gap-2 shadow-lg shadow-indigo-600/30"
-      >
-        <MessageSquare size={18} /> Asistente IA
-      </button>
-
-      {open && (
+      {isOpen && (
         <div className="fixed bottom-6 right-6 w-[400px] max-w-[calc(100vw-3rem)] h-[550px] bg-zinc-900/95 backdrop-blur-xl border border-indigo-500/30 rounded-2xl shadow-2xl shadow-indigo-500/20 flex flex-col z-[60] overflow-hidden animate-[slideUp_0.3s_ease-out]">
           <div className="bg-gradient-to-r from-indigo-600 to-indigo-800 p-4 flex justify-between items-center shadow-md">
             <h3 className="font-bold text-white flex items-center gap-2">
               <MessageSquare size={18} /> Asistente IA
             </h3>
             <button
-              onClick={() => setOpen(false)}
+              onClick={() => onClose?.()}
               className="text-indigo-200 hover:text-white bg-white/10 p-1 rounded-md"
             >
               <X size={18} />
