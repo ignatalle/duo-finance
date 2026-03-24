@@ -150,7 +150,7 @@ export function ModalEscanner({ isOpen, onClose }: ModalEscannerProps) {
         onClose()
         resetEstado()
       } catch {
-        toast.showToast('Error al guardar. Intentá de nuevo.', { type: 'error' })
+        toast.showToast('Error al guardar. Intentá de nuevo.', 'error')
       }
     })
   }
@@ -175,9 +175,9 @@ export function ModalEscanner({ isOpen, onClose }: ModalEscannerProps) {
 
   const handleAnalizarConIA = async () => {
     if (!textoOCR.trim()) return
-    setIsAnalizandoIA(true)
+    setUsandoIA(true)
     const res = await analizarDocumentoConIA(textoOCR)
-    setIsAnalizandoIA(false)
+    setUsandoIA(false)
     if (res.success && res.gastos?.length) {
       setGastos(res.gastos)
       setUsandoIA(true)

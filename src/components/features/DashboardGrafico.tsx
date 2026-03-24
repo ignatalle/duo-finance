@@ -202,7 +202,7 @@ export function DashboardGrafico({
   const datosLinea = vista === 'linea' || vista === 'area' ? diario : velas.map((v) => ({ saldoAcum: v.close }))
   const datosVelas = velas
 
-  const { bars, trendPath, areaPath, width, height, saldoCierre, puntosX } = useMemo(() => {
+  const { bars, trendPath, areaPath, width, height, saldoCierre } = useMemo(() => {
     const w = 280
     const h = 140
     const padding = { top: 12, right: 8, bottom: 20, left: 8 }

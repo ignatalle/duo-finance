@@ -9,7 +9,12 @@ import type { Transaccion } from '@/types'
 const formatearMonto = (monto: number) =>
   new Intl.NumberFormat('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(monto)
 
-export function UltimosMovimientos({ transacciones }: { transacciones: Transaccion[] }) {
+type TransaccionResumen = Pick<
+  Transaccion,
+  'id' | 'monto' | 'tipo' | 'categoria' | 'descripcion' | 'created_at'
+>
+
+export function UltimosMovimientos({ transacciones }: { transacciones: TransaccionResumen[] }) {
   const ultimos = transacciones.slice(0, 5)
 
   if (ultimos.length === 0) {

@@ -41,7 +41,7 @@ export async function DashboardSaldos({ inicioMes, finMes, mesRef, usuarioId, me
 
       <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 relative overflow-hidden">
         <p className="text-zinc-500 text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5">
-          Saldo Disponible Real <AlertTriangle size={12} className="text-blue-400" title="Info" />
+          Saldo Disponible Real <AlertTriangle size={12} className="text-blue-400" />
         </p>
         <h3 className="text-3xl font-bold text-white mb-2">
           ${saldoDisponibleReal.toLocaleString('es-AR')}
