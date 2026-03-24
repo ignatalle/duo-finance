@@ -1,9 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { obtenerMetaAhorroMensual } from '@/app/actions/metasAhorroMensual'
 import { DashboardHeader } from '@/components/features/DashboardHeader'
 import { DashboardSaldos } from '@/components/features/DashboardSaldos'
 import { DashboardSalud } from '@/components/features/DashboardSalud'
 import { DashboardGrafico } from '@/components/features/DashboardGrafico'
+import { UltimosMovimientos } from '@/components/features/UltimosMovimientos'
 
 export default async function DashboardPage(props: { searchParams: Promise<{ mes?: string }> }) {
   const supabase = await createClient()
@@ -22,15 +24,17 @@ export default async function DashboardPage(props: { searchParams: Promise<{ mes
 
   const { data: transacciones } = await supabase
     .from('transacciones')
-    .select('monto, tipo, created_at')
+    .select('id, monto, tipo, categoria, descripcion, created_at')
     .eq('usuario_id', user.id)
     .gte('created_at', inicioMes)
     .lte('created_at', finMes)
     .order('created_at', { ascending: true })
 
+  const transaccionesOrdenadas = [...(transacciones || [])].reverse()
   const ingresos = transacciones?.filter((t) => t.tipo === 'ingreso').reduce((a, t) => a + t.monto, 0) || 0
   const gastos = transacciones?.filter((t) => t.tipo === 'gasto').reduce((a, t) => a + t.monto, 0) || 0
   const saldoMes = ingresos - gastos
+  const { data: metaAhorroGuardada } = await obtenerMetaAhorroMensual(mesParam)
 
   return (
     <div className="flex flex-col gap-8 w-full max-w-[1600px] mx-auto">
@@ -41,11 +45,23 @@ export default async function DashboardPage(props: { searchParams: Promise<{ mes
         finMes={finMes}
         mesRef={mesParam}
         usuarioId={user.id}
+        metaAhorroGuardada={metaAhorroGuardada}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <DashboardGrafico transacciones={transacciones || []} ultimoDiaMes={ultimoDiaMes} />
-        <DashboardSalud saldoMes={saldoMes} ingresos={ingresos} />
+        <DashboardGrafico
+          transacciones={transaccionesOrdenadas || []}
+          ultimoDiaMes={ultimoDiaMes}
+          mesParam={mesParam}
+          saldoMes={saldoMes}
+          ingresos={ingresos}
+          gastos={gastos}
+          metaAhorroGuardada={metaAhorroGuardada}
+        />
+        <div className="flex flex-col gap-4">
+          <DashboardSalud saldoMes={saldoMes} ingresos={ingresos} gastos={gastos} />
+          <UltimosMovimientos transacciones={transacciones || []} />
+        </div>
       </div>
 
     </div>

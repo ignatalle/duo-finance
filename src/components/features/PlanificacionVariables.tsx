@@ -1,17 +1,35 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
-import { PieChart, Settings, Activity } from 'lucide-react'
+import { PieChart, Settings, Zap, Pencil, Trash2 } from 'lucide-react'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { AlertTriangle } from 'lucide-react'
+import { ModalConfirmarEliminarPresupuesto } from './ModalConfirmarEliminarPresupuesto'
 interface PlanificacionVariablesProps {
   presupuestos: { id: string; categoria: string; limite_mensual: number }[]
   consumoPorCategoria: Record<string, number>
   mesParam?: string
 }
 
+const SUGERENCIAS = [
+  '🛒 Supermercado',
+  '🍔 Comida / Delivery',
+  '🎬 Entretenimiento',
+  '🚗 Transporte / Nafta',
+  '⚕️ Salud / Farmacia',
+]
+
 export function PlanificacionVariables({ presupuestos, consumoPorCategoria, mesParam = '' }: PlanificacionVariablesProps) {
-  const configUrl = mesParam ? `/dashboard/gastos?mes=${mesParam}&config=limites` : '/dashboard/gastos?config=limites'
+  const [eliminarId, setEliminarId] = useState<string | null>(null)
+  const baseConfig = mesParam ? `mes=${mesParam}&config=limites` : 'config=limites'
+  const configUrl = `/dashboard/gastos?${baseConfig}`
+
+  const urlConCategoria = (cat: string) =>
+    `/dashboard/gastos?${baseConfig}&cat=${encodeURIComponent(cat)}`
+
+  const urlEditar = (id: string, cat: string) =>
+    `/dashboard/gastos?${baseConfig}&edit=${id}&cat=${encodeURIComponent(cat)}`
 
   if (presupuestos.length === 0) {
     return (
@@ -35,18 +53,31 @@ export function PlanificacionVariables({ presupuestos, consumoPorCategoria, mesP
           </Link>
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center py-8 text-center">
-          <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center mb-4">
-            <Activity size={28} className="text-zinc-500" />
+        <div className="flex-1 flex flex-col justify-center py-6">
+          <div className="flex flex-col items-center text-center mb-6">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500/30 to-fuchsia-500/20 flex items-center justify-center mb-4 border border-violet-500/30">
+              <Zap size={28} className="text-violet-400" />
+            </div>
+            <p className="text-white font-semibold mb-1">Empezá con una categoría</p>
+            <p className="text-zinc-500 text-sm mb-4">Tocá una para configurar tu primer límite</p>
           </div>
-          <p className="text-white font-medium mb-1">¿Cuánto estimás gastar en comida o salidas?</p>
-          <p className="text-zinc-500 text-sm mb-6">Configurá tus topes mensuales</p>
-          <Link
-            href={configUrl}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl text-violet-400 font-semibold text-sm transition-colors"
-          >
-            Configurar límites
-          </Link>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {SUGERENCIAS.map((cat) => (
+              <Link
+                key={cat}
+                href={urlConCategoria(cat)}
+                className="px-4 py-2.5 rounded-xl bg-zinc-800/80 hover:bg-violet-500/20 border border-zinc-700 hover:border-violet-500/40 text-zinc-300 hover:text-violet-300 text-sm font-medium transition-all"
+              >
+                {cat}
+              </Link>
+            ))}
+          </div>
+          <p className="text-center text-zinc-500 text-xs mt-4">
+            o{' '}
+            <Link href={configUrl} className="text-violet-400 hover:underline font-medium">
+              configurar todos
+            </Link>
+          </p>
         </div>
       </div>
     )
@@ -79,13 +110,32 @@ export function PlanificacionVariables({ presupuestos, consumoPorCategoria, mesP
           const porcentaje = p.limite_mensual > 0 ? (consumido / p.limite_mensual) * 100 : 0
           const isWarning = porcentaje > 85
           return (
-            <div key={p.id} className="bg-zinc-800/50 p-4 rounded-xl border border-zinc-700/50">
-              <div className="flex justify-between items-center mb-2">
-                <p className="text-sm font-medium text-zinc-200">{p.categoria}</p>
-                <p className="text-sm font-bold text-white">
-                  ${consumido.toLocaleString('es-AR')}{' '}
-                  <span className="text-zinc-500 font-normal">/ ${p.limite_mensual.toLocaleString('es-AR')}</span>
-                </p>
+            <div key={p.id} className="bg-zinc-800/50 p-4 rounded-xl border border-zinc-700/50 group">
+              <div className="flex justify-between items-start mb-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-zinc-200">{p.categoria}</p>
+                  <p className="text-sm font-bold text-white mt-0.5">
+                    ${consumido.toLocaleString('es-AR')}{' '}
+                    <span className="text-zinc-500 font-normal">/ ${p.limite_mensual.toLocaleString('es-AR')}</span>
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <Link
+                    href={urlEditar(p.id, p.categoria)}
+                    className="p-2 rounded-lg text-zinc-500 hover:text-violet-400 hover:bg-violet-500/10 transition-colors"
+                    title="Editar"
+                  >
+                    <Pencil size={16} />
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setEliminarId(p.id)}
+                    className="p-2 rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                    title="Eliminar"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
               <ProgressBar
                 current={consumido}
@@ -102,6 +152,14 @@ export function PlanificacionVariables({ presupuestos, consumoPorCategoria, mesP
           )
         })}
       </div>
+
+      {eliminarId && (
+        <ModalConfirmarEliminarPresupuesto
+          presupuestoId={eliminarId}
+          categoria={presupuestos.find((p) => p.id === eliminarId)?.categoria || ''}
+          onClose={() => setEliminarId(null)}
+        />
+      )}
 
       <Link
         href={configUrl}

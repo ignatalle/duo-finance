@@ -8,7 +8,7 @@ export function GastosClient({
   presupuestos,
 }: {
   mesParam: string
-  presupuestos: { categoria: string; limite_mensual: number }[]
+  presupuestos: { id: string; categoria: string; limite_mensual: number }[]
 }) {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -18,6 +18,8 @@ export function GastosClient({
   const handleClose = () => {
     const params = new URLSearchParams(searchParams.toString())
     params.delete('config')
+    params.delete('edit')
+    params.delete('cat')
     const q = params.toString()
     router.push(q ? `${pathname}?${q}` : pathname)
   }

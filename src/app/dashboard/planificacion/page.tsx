@@ -1,9 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Card } from '@/components/ui/Card'
-import { ProgressBar } from '@/components/ui/ProgressBar'
 import { calcularMargenLibreProximoMes } from '@/lib/calculos'
-import { Target } from 'lucide-react'
+import { PlanificacionCompromisosCard } from '@/components/features/PlanificacionCompromisosCard'
+import { PlanificacionPresupuestoCard } from '@/components/features/PlanificacionPresupuestoCard'
 
 export default async function PlanificacionPage() {
   const supabase = await createClient()
@@ -72,59 +72,11 @@ export default async function PlanificacionPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <h3 className="text-lg font-bold text-white mb-4 border-b border-zinc-700 pb-2">El mes que viene tenés que pagar:</h3>
-          <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
-            <p className="text-xs font-bold text-zinc-500 uppercase">Servicios Fijos</p>
-            {gastosFijosLista.map((g) => (
-              <div key={g.id} className="flex justify-between items-center bg-zinc-900/50 p-3 rounded-lg">
-                <span className="text-sm text-zinc-300">{g.descripcion || g.categoria}</span>
-                <span className="text-sm font-bold text-rose-400">-${g.monto.toLocaleString('es-AR')}</span>
-              </div>
-            ))}
-            <p className="text-xs font-bold text-zinc-500 uppercase pt-2">Cuotas de Tarjetas</p>
-            {(cuotasProximoMes || []).map((c) => (
-              <div key={c.id} className="flex justify-between items-center bg-indigo-900/20 p-3 rounded-lg border border-indigo-500/10">
-                <span className="text-sm text-indigo-200">{c.descripcion}</span>
-                <span className="text-sm font-bold text-indigo-400">-${c.monto.toLocaleString('es-AR')}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        <Card>
-          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <Target size={18} className="text-amber-400" /> Presupuesto Sugerido (Regla 50/30/20)
-          </h3>
-          <p className="text-sm text-zinc-400 mb-6">
-            Sobre tu margen libre de ${margenLibre.toLocaleString('es-AR')}, sugerimos dividirlo así:
-          </p>
-          <div className="space-y-6">
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-zinc-200 font-medium">50% Gastos Variables (Comida, nafta)</span>
-                <span className="text-white font-bold">${(margenLibre * 0.5).toLocaleString('es-AR')}</span>
-              </div>
-              <ProgressBar current={50} max={100} colorClass="bg-blue-500" heightClass="h-3" />
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-zinc-200 font-medium">30% Estilo de Vida (Salidas, gustos)</span>
-                <span className="text-white font-bold">${(margenLibre * 0.3).toLocaleString('es-AR')}</span>
-              </div>
-              <ProgressBar current={30} max={100} colorClass="bg-fuchsia-500" heightClass="h-3" />
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-zinc-200 font-medium flex items-center gap-1">
-                  <Target size={14} className="text-emerald-400" /> 20% Ahorro e Inversión
-                </span>
-                <span className="text-emerald-400 font-bold">${(margenLibre * 0.2).toLocaleString('es-AR')}</span>
-              </div>
-              <ProgressBar current={20} max={100} colorClass="bg-emerald-500" heightClass="h-3" />
-            </div>
-          </div>
-        </Card>
+        <PlanificacionCompromisosCard
+          gastosFijosLista={gastosFijosLista}
+          cuotasProximoMes={cuotasProximoMes || []}
+        />
+        <PlanificacionPresupuestoCard margenLibre={margenLibre} />
       </div>
     </div>
   )

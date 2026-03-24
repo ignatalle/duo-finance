@@ -35,9 +35,9 @@ export async function obtenerPresupuestos(mesRef: string) {
 export async function guardarPresupuesto(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado')
+  if (!user) return { success: false, error: 'No autenticado' }
 
-  const { data: perfil } = await supabase.from('perfiles').select('pareja_id').eq('id', user.id).single()
+  const { data: perfil } = await supabase.from('perfiles').select('pareja_id').eq('id', user.id).maybeSingle()
 
   const categoria = formData.get('categoria') as string
   const limiteMensual = parseFloat(formData.get('limite_mensual') as string) || 0
@@ -59,25 +59,39 @@ export async function guardarPresupuesto(formData: FormData) {
   if (id) {
     const { error } = await supabase
       .from('presupuestos_categoria')
-      .update(datos)
+      .update({ limite_mensual: datos.limite_mensual })
       .eq('id', id)
       .eq('usuario_id', user.id)
 
     if (error) {
       console.error('Error actualizando presupuesto:', error)
-      return { success: false, error: 'No se pudo actualizar' }
+      return { success: false, error: error.message }
     }
   } else {
-    const { error } = await supabase
+    const { data: existente } = await supabase
       .from('presupuestos_categoria')
-      .upsert(datos, {
-        onConflict: 'usuario_id,categoria,mes_ref',
-        ignoreDuplicates: false,
-      })
+      .select('id')
+      .eq('usuario_id', user.id)
+      .eq('categoria', datos.categoria)
+      .eq('mes_ref', datos.mes_ref)
+      .maybeSingle()
+
+    let error
+    if (existente) {
+      const res = await supabase
+        .from('presupuestos_categoria')
+        .update({ limite_mensual: datos.limite_mensual })
+        .eq('id', existente.id)
+        .eq('usuario_id', user.id)
+      error = res.error
+    } else {
+      const res = await supabase.from('presupuestos_categoria').insert(datos)
+      error = res.error
+    }
 
     if (error) {
       console.error('Error guardando presupuesto:', error)
-      return { success: false, error: 'No se pudo guardar' }
+      return { success: false, error: error.message }
     }
   }
 
@@ -89,7 +103,7 @@ export async function guardarPresupuesto(formData: FormData) {
 export async function eliminarPresupuesto(id: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado')
+  if (!user) return { success: false, error: 'No autenticado' }
 
   const { error } = await supabase
     .from('presupuestos_categoria')

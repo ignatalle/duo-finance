@@ -26,36 +26,65 @@ export function ModalPresupuestos({
   isOpen: boolean
   onClose: () => void
   mesRef: string
-  presupuestosExistentes: { categoria: string; limite_mensual: number }[]
+  presupuestosExistentes: { id: string; categoria: string; limite_mensual: number }[]
 }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [categoria, setCategoria] = useState(CATEGORIAS_GASTO[0])
   const [limite, setLimite] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const catParam = searchParams.get('cat')
+    ? decodeURIComponent(searchParams.get('cat')!)
+    : null
+  const editId = searchParams.get('edit')
 
   useEffect(() => {
     if (isOpen) {
-      const existente = presupuestosExistentes.find((p) => p.categoria === categoria)
-      setLimite(existente ? String(existente.limite_mensual) : '')
+      setError(null)
+      if (editId) {
+        const existente = presupuestosExistentes.find((p) => p.id === editId)
+        if (existente) {
+          setCategoria(existente.categoria)
+          setLimite(String(existente.limite_mensual))
+        }
+      } else {
+        const catInicial = catParam && CATEGORIAS_GASTO.includes(catParam) ? catParam : categoria
+        if (catParam && CATEGORIAS_GASTO.includes(catParam)) setCategoria(catParam)
+        const existente = presupuestosExistentes.find((p) => p.categoria === (catParam && CATEGORIAS_GASTO.includes(catParam) ? catParam : categoria))
+        setLimite(existente ? String(existente.limite_mensual) : '')
+      }
     }
-  }, [isOpen, categoria, presupuestosExistentes])
+  }, [isOpen, presupuestosExistentes, catParam, editId])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const valor = parseFloat(limite.replace(/,/g, '.'))
-    if (isNaN(valor) || valor < 0) return
+    setError(null)
+    const valor = parseFloat(String(limite).replace(/,/g, '.'))
+    if (isNaN(valor) || valor < 0) {
+      setError('Ingresá un monto válido')
+      return
+    }
     setLoading(true)
-    const formData = new FormData()
-    formData.set('categoria', categoria)
-    formData.set('limite_mensual', String(valor))
-    formData.set('mes_ref', mesRef)
-    const result = await guardarPresupuesto(formData)
-    setLoading(false)
-    if (result.success) {
-      router.refresh()
-      onClose()
-      setLimite('')
+    try {
+      const formData = new FormData()
+      formData.set('categoria', categoria)
+      formData.set('limite_mensual', String(valor))
+      formData.set('mes_ref', mesRef)
+      if (editId) formData.set('id', editId)
+      const result = await guardarPresupuesto(formData)
+      if (result.success) {
+        router.refresh()
+        onClose()
+        setLimite('')
+      } else {
+        setError(result.error || 'No se pudo guardar')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al guardar')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -64,9 +93,12 @@ export function ModalPresupuestos({
   return (
     <>
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" onClick={onClose} />
-      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl z-50 p-6">
+      <div
+        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl z-50 p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-bold text-white">Configurar límite mensual</h3>
+          <h3 className="text-lg font-bold text-white">{editId ? 'Editar límite' : 'Configurar límite mensual'}</h3>
           <button
             type="button"
             onClick={onClose}
@@ -83,7 +115,8 @@ export function ModalPresupuestos({
             <select
               value={categoria}
               onChange={(e) => setCategoria(e.target.value)}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-violet-500"
+              disabled={!!editId}
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-violet-500 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {CATEGORIAS_GASTO.map((c) => (
                 <option key={c} value={c}>{c}</option>
@@ -105,12 +138,15 @@ export function ModalPresupuestos({
               required
             />
           </div>
+          {error && (
+            <p className="text-sm text-rose-400">{error}</p>
+          )}
           <button
             type="submit"
             disabled={loading}
             className="w-full py-3 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white font-bold rounded-xl transition-colors"
           >
-            {loading ? 'Guardando...' : 'Guardar límite'}
+            {loading ? 'Guardando...' : editId ? 'Actualizar límite' : 'Guardar límite'}
           </button>
         </form>
       </div>
