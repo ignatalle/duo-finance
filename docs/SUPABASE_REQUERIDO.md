@@ -9,8 +9,10 @@ Lista de todo lo que debe existir en Supabase para que la app funcione y soporte
 - **Proyecto Supabase** creado y activo
 - **URL y anon key** configurados en `.env.local`:
   ```
-  NEXT_PUBLIC_SUPABASE_URL=...
-  NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+# Opcional: para análisis por IA del escáner de tickets (OpenAI)
+# OPENAI_API_KEY=sk-...
   ```
 - **Authentication** habilitado (Email/Password mínimo)
 - **Row Level Security (RLS)** habilitado en todas las tablas
@@ -149,6 +151,7 @@ CREATE POLICY "Usuarios gestionan sus transacciones" ON transacciones
 | `tarjetas` | Tarjetas de crédito vinculadas |
 | `presupuestos_categoria` | Límites por categoría y mes |
 | `metas` | Metas de ahorro |
+| `metas_ahorro_mensual` | Meta de ahorro por mes (descuento del saldo disponible) |
 
 ---
 
