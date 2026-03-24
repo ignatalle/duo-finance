@@ -33,8 +33,8 @@ export function PlanificacionVariables({ presupuestos, consumoPorCategoria, mesP
 
   if (presupuestos.length === 0) {
     return (
-      <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 flex flex-col">
-        <div className="flex justify-between items-start mb-6">
+      <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-6 flex flex-col min-w-0">
+        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start mb-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
               <PieChart size={20} className="text-violet-400" />
@@ -46,7 +46,7 @@ export function PlanificacionVariables({ presupuestos, consumoPorCategoria, mesP
           </div>
           <Link
             href={configUrl}
-            className="p-2 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 rounded-lg transition-colors"
+            className="p-2 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 rounded-lg transition-colors shrink-0 self-end sm:self-auto"
             aria-label="Configuración"
           >
             <Settings size={18} />
@@ -61,12 +61,12 @@ export function PlanificacionVariables({ presupuestos, consumoPorCategoria, mesP
             <p className="text-white font-semibold mb-1">Empezá con una categoría</p>
             <p className="text-zinc-500 text-sm mb-4">Tocá una para configurar tu primer límite</p>
           </div>
-          <div className="flex flex-wrap gap-2 justify-center">
+          <div className="flex gap-2 justify-start overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1 md:flex-wrap md:justify-center md:overflow-visible">
             {SUGERENCIAS.map((cat) => (
               <Link
                 key={cat}
                 href={urlConCategoria(cat)}
-                className="px-4 py-2.5 rounded-xl bg-zinc-800/80 hover:bg-violet-500/20 border border-zinc-700 hover:border-violet-500/40 text-zinc-300 hover:text-violet-300 text-sm font-medium transition-all"
+                className="shrink-0 px-4 py-2.5 rounded-xl bg-zinc-800/80 hover:bg-violet-500/20 border border-zinc-700 hover:border-violet-500/40 text-zinc-300 hover:text-violet-300 text-sm font-medium transition-all max-w-[min(100%,280px)] truncate"
               >
                 {cat}
               </Link>
@@ -84,8 +84,8 @@ export function PlanificacionVariables({ presupuestos, consumoPorCategoria, mesP
   }
 
   return (
-    <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
-      <div className="flex justify-between items-start mb-6">
+    <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-6 min-w-0">
+      <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
             <PieChart size={20} className="text-violet-400" />
@@ -97,7 +97,7 @@ export function PlanificacionVariables({ presupuestos, consumoPorCategoria, mesP
         </div>
         <Link
           href={configUrl}
-          className="p-2 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 rounded-lg transition-colors"
+          className="p-2 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 rounded-lg transition-colors shrink-0 self-end sm:self-auto"
           aria-label="Configuración"
         >
           <Settings size={18} />
@@ -111,9 +111,9 @@ export function PlanificacionVariables({ presupuestos, consumoPorCategoria, mesP
           const isWarning = porcentaje > 85
           return (
             <div key={p.id} className="bg-zinc-800/50 p-4 rounded-xl border border-zinc-700/50 group">
-              <div className="flex justify-between items-start mb-2">
+              <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start mb-2">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-zinc-200">{p.categoria}</p>
+                  <p className="text-sm font-medium text-zinc-200 break-words">{p.categoria}</p>
                   <p className="text-sm font-bold text-white mt-0.5">
                     ${consumido.toLocaleString('es-AR')}{' '}
                     <span className="text-zinc-500 font-normal">/ ${p.limite_mensual.toLocaleString('es-AR')}</span>

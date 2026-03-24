@@ -40,7 +40,7 @@ export default async function EspacioCompartidoPage(props: { searchParams: Promi
       </div>
 
       <div className="max-w-4xl mx-auto space-y-6">
-        <div className="rounded-[32px] bg-zinc-900/40 border border-zinc-800 p-4">
+        <div className="rounded-[32px] bg-zinc-900/40 border border-zinc-800 p-4 md:p-6 min-w-0">
           <ModuloPareja parejaId={perfil?.pareja_id} codigoPareja={codigoPareja} />
         </div>
         {perfil?.pareja_id && (

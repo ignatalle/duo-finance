@@ -107,8 +107,8 @@ export function PlanificacionPresupuestoCard({
 
       <div className="space-y-6">
         <div>
-          <div className="flex justify-between text-sm mb-2">
-            <span className="text-zinc-200 font-medium">
+          <div className="flex flex-col gap-1 sm:flex-row sm:justify-between sm:items-baseline text-sm mb-2">
+            <span className="text-zinc-200 font-medium min-w-0 break-words">
               {estrategia === 'clasica' ? '50%' : estrategia === 'proteccionInflacionaria' ? '40%' : ''} Gastos Variables (Comida, nafta)
             </span>
             {estrategia === 'baseCero' ? (
@@ -118,10 +118,10 @@ export function PlanificacionPresupuestoCard({
                 onChange={(e) => setBaseCeroVars(parseFloat(e.target.value) || 0)}
                 placeholder="0"
                 min={0}
-                className="w-28 bg-zinc-800 border border-zinc-600 rounded px-2 py-1 text-white text-sm font-bold focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="w-full max-w-[7rem] shrink-0 bg-zinc-800 border border-zinc-600 rounded px-2 py-1 text-white text-sm font-bold focus:outline-none focus:ring-1 focus:ring-amber-500"
               />
             ) : (
-              <span className="text-white font-bold">${variables.toLocaleString('es-AR')}</span>
+              <span className="text-white font-bold shrink-0 tabular-nums">${variables.toLocaleString('es-AR')}</span>
             )}
           </div>
           <ProgressBar
@@ -132,8 +132,8 @@ export function PlanificacionPresupuestoCard({
           />
         </div>
         <div>
-          <div className="flex justify-between text-sm mb-2">
-            <span className="text-zinc-200 font-medium">
+          <div className="flex flex-col gap-1 sm:flex-row sm:justify-between sm:items-baseline text-sm mb-2">
+            <span className="text-zinc-200 font-medium min-w-0 break-words">
               {estrategia === 'clasica' ? '30%' : estrategia === 'proteccionInflacionaria' ? '40%' : ''} Estilo de Vida (Salidas, gustos)
             </span>
             {estrategia === 'baseCero' ? (
@@ -143,10 +143,10 @@ export function PlanificacionPresupuestoCard({
                 onChange={(e) => setBaseCeroEstilo(parseFloat(e.target.value) || 0)}
                 placeholder="0"
                 min={0}
-                className="w-28 bg-zinc-800 border border-zinc-600 rounded px-2 py-1 text-white text-sm font-bold focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="w-full max-w-[7rem] shrink-0 bg-zinc-800 border border-zinc-600 rounded px-2 py-1 text-white text-sm font-bold focus:outline-none focus:ring-1 focus:ring-amber-500"
               />
             ) : (
-              <span className="text-white font-bold">${estilo.toLocaleString('es-AR')}</span>
+              <span className="text-white font-bold shrink-0 tabular-nums">${estilo.toLocaleString('es-AR')}</span>
             )}
           </div>
           <ProgressBar
@@ -157,10 +157,10 @@ export function PlanificacionPresupuestoCard({
           />
         </div>
         <div>
-          <div className="flex justify-between text-sm mb-2">
-            <span className="text-zinc-200 font-medium flex items-center gap-1">
-              <Target size={14} className="text-emerald-400" />
-              {estrategia === 'clasica' ? '20%' : ''} {labelAhorro}
+          <div className="flex flex-col gap-1 sm:flex-row sm:justify-between sm:items-baseline text-sm mb-2">
+            <span className="text-zinc-200 font-medium flex flex-wrap items-center gap-1 min-w-0">
+              <Target size={14} className="text-emerald-400 shrink-0" />
+              <span className="break-words">{estrategia === 'clasica' ? '20%' : ''} {labelAhorro}</span>
             </span>
             {estrategia === 'baseCero' ? (
               <input
@@ -169,10 +169,10 @@ export function PlanificacionPresupuestoCard({
                 onChange={(e) => setBaseCeroAhorro(parseFloat(e.target.value) || 0)}
                 placeholder="0"
                 min={0}
-                className="w-28 bg-zinc-800 border border-zinc-600 rounded px-2 py-1 text-white text-sm font-bold focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="w-full max-w-[7rem] shrink-0 bg-zinc-800 border border-zinc-600 rounded px-2 py-1 text-white text-sm font-bold focus:outline-none focus:ring-1 focus:ring-amber-500"
               />
             ) : (
-              <span className="text-emerald-400 font-bold">${ahorro.toLocaleString('es-AR')}</span>
+              <span className="text-emerald-400 font-bold shrink-0 tabular-nums">${ahorro.toLocaleString('es-AR')}</span>
             )}
           </div>
           <ProgressBar

@@ -51,9 +51,9 @@ export async function ParejaResumen({
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-end">
-        <div>
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+      <div className="flex flex-col gap-2 md:flex-row md:justify-between md:items-end min-w-0">
+        <div className="min-w-0">
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2 flex-wrap">
             <Users className="text-fuchsia-400" /> Finanzas Compartidas
           </h2>
           <p className="text-zinc-400 text-sm">Gastos a medias con {nombrePareja}.</p>
@@ -135,14 +135,14 @@ export async function ParejaResumen({
             transacciones?.map((g) => (
               <div
                 key={g.id}
-                className="bg-zinc-800/80 p-3 rounded-xl border border-zinc-700/50 flex justify-between items-center hover:bg-zinc-800 transition-colors"
+                className="bg-zinc-800/80 p-3 rounded-xl border border-zinc-700/50 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center hover:bg-zinc-800 transition-colors min-w-0"
               >
-                <div className="flex items-center gap-4">
-                  <div className="bg-zinc-900 p-2.5 rounded-xl text-lg border border-zinc-700/50">
+                <div className="flex items-center gap-4 min-w-0 flex-1">
+                  <div className="bg-zinc-900 p-2.5 rounded-xl text-lg border border-zinc-700/50 shrink-0">
                     {emojiFromCategoria(g.categoria)}
                   </div>
-                  <div>
-                    <p className="text-white font-bold text-sm">{g.descripcion || g.categoria}</p>
+                  <div className="min-w-0">
+                    <p className="text-white font-bold text-sm break-words">{g.descripcion || g.categoria}</p>
                     <p className="text-xs text-zinc-400">
                       {format(new Date(g.created_at), 'dd MMM yyyy', { locale: es })} • Pagó:{' '}
                       <span className={g.pagado_por === usuarioId ? 'text-indigo-400 font-medium' : 'text-fuchsia-400 font-medium'}>
@@ -151,8 +151,8 @@ export async function ParejaResumen({
                     </p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-white font-bold">${g.monto.toLocaleString('es-AR')}</p>
+                <div className="w-full text-left sm:w-auto sm:text-right shrink-0 border-t border-zinc-700/50 pt-2 sm:border-0 sm:pt-0">
+                  <p className="text-white font-bold tabular-nums">${g.monto.toLocaleString('es-AR')}</p>
                   <p className="text-xs text-zinc-500">Mitad: ${(g.monto / 2).toLocaleString('es-AR')}</p>
                 </div>
               </div>

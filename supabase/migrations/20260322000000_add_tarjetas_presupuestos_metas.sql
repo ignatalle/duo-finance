@@ -1,4 +1,4 @@
--- Migración: Adaptar CuentasClaras - Tarjetas, Presupuestos, Metas
+-- Migración: Adaptar Duo Finance - Tarjetas, Presupuestos, Metas
 -- Ejecutar en el editor SQL de Supabase o con: supabase db push
 
 -- 1. Crear tabla tarjetas

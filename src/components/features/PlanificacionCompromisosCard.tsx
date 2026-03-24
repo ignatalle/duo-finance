@@ -30,16 +30,16 @@ export function PlanificacionCompromisosCard({
         <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
           <p className="text-xs font-bold text-zinc-500 uppercase">Servicios Fijos</p>
           {gastosFijosLista.map((g) => (
-            <div key={g.id} className="flex justify-between items-center bg-zinc-900/50 p-3 rounded-lg">
-              <span className="text-sm text-zinc-300">{g.descripcion || g.categoria}</span>
-              <span className="text-sm font-bold text-rose-400">-${g.monto.toLocaleString('es-AR')}</span>
+            <div key={g.id} className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center bg-zinc-900/50 p-3 rounded-lg min-w-0">
+              <span className="text-sm text-zinc-300 break-words min-w-0 flex-1">{g.descripcion || g.categoria}</span>
+              <span className="text-sm font-bold text-rose-400 shrink-0 tabular-nums sm:text-right">-${g.monto.toLocaleString('es-AR')}</span>
             </div>
           ))}
           <p className="text-xs font-bold text-zinc-500 uppercase pt-2">Cuotas de Tarjetas</p>
           {cuotasProximoMes.map((c) => (
-            <div key={c.id} className="flex justify-between items-center bg-indigo-900/20 p-3 rounded-lg border border-indigo-500/10">
-              <span className="text-sm text-indigo-200">{c.descripcion}</span>
-              <span className="text-sm font-bold text-indigo-400">-${c.monto.toLocaleString('es-AR')}</span>
+            <div key={c.id} className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center bg-indigo-900/20 p-3 rounded-lg border border-indigo-500/10 min-w-0">
+              <span className="text-sm text-indigo-200 break-words min-w-0 flex-1">{c.descripcion}</span>
+              <span className="text-sm font-bold text-indigo-400 shrink-0 tabular-nums sm:text-right">-${c.monto.toLocaleString('es-AR')}</span>
             </div>
           ))}
           <button

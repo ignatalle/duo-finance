@@ -56,15 +56,15 @@ export function TarjetasSection({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-end">
-        <div>
+      <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-end">
+        <div className="min-w-0">
           <h2 className="text-2xl font-bold text-white uppercase tracking-tight">Tarjetas y Cuotas</h2>
           <p className="text-zinc-500 text-sm uppercase tracking-wider mt-0.5">Controlá tu deuda futura</p>
         </div>
         <button
           type="button"
           onClick={openModalCrear}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-600 bg-zinc-900 text-white font-semibold text-sm hover:bg-zinc-800 hover:border-zinc-500 transition-colors"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-600 bg-zinc-900 text-white font-semibold text-sm hover:bg-zinc-800 hover:border-zinc-500 transition-colors shrink-0 self-start md:self-auto"
         >
           <CreditCard size={16} />
           + Vincular Tarjeta
@@ -96,7 +96,7 @@ export function TarjetasSection({
           <CuotasPendientes tarjetas={tarjetas || []} cuotasPorTarjeta={cuotasPorTarjeta} />
         </>
       ) : (
-        <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/30 py-16 px-6 text-center">
+        <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/30 py-16 px-4 md:px-6 text-center">
           <p className="text-zinc-500 mb-4">No hay tarjetas ni cuotas registradas.</p>
           <button
             type="button"
@@ -122,7 +122,6 @@ export function TarjetasSection({
         />
       )}
 
-      <style dangerouslySetInnerHTML={{ __html: '.hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }' }} />
     </div>
   )
 }

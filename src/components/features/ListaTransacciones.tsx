@@ -139,7 +139,7 @@ export function ListaTransacciones({ transacciones, usuarioActualId }: { transac
             </div>
             
             {/* Sector Derecho: Montos y Acciones */}
-            <div className="flex items-center justify-between sm:justify-end gap-6 sm:pl-4 pl-16">
+            <div className="flex w-full items-center justify-between gap-4 sm:justify-end sm:gap-6 sm:pl-4 sm:w-auto">
               <div className="flex flex-col items-start sm:items-end">
                 <span className={`text-lg font-bold font-mono tracking-tight ${t.tipo === 'ingreso' ? 'text-emerald-400' : (esPendiente ? 'text-orange-400' : 'text-white')}`}>
                   {t.tipo === 'ingreso' ? '+' : '-'}{formatearMonto(Number(t.monto))}

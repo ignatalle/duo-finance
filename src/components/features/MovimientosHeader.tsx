@@ -31,8 +31,8 @@ export function MovimientosHeader({ mesParam }: { mesParam: string }) {
     <div className="space-y-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2">
+          <div className="flex flex-wrap items-center gap-2 min-w-0">
+            <div className="flex items-center gap-2 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 min-w-0">
               <CalendarDays size={18} className="text-zinc-400" />
               <input
                 type="month"
@@ -52,18 +52,18 @@ export function MovimientosHeader({ mesParam }: { mesParam: string }) {
           </p>
         </div>
         {modal && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col w-full sm:w-auto sm:flex-row gap-2 min-w-0">
             <button
               type="button"
               onClick={() => modal.openGasto()}
-              className="flex items-center gap-2 bg-rose-500/90 hover:bg-rose-500 text-white font-bold px-4 py-2.5 rounded-xl transition-colors shadow-lg shadow-rose-500/20"
+              className="flex items-center justify-center gap-2 bg-rose-500/90 hover:bg-rose-500 text-white font-bold px-4 py-2.5 rounded-xl transition-colors shadow-lg shadow-rose-500/20"
             >
               <ArrowUpRight size={18} strokeWidth={2.5} /> Nuevo Gasto
             </button>
             <button
               type="button"
               onClick={() => modal.openIngreso()}
-              className="flex items-center gap-2 bg-teal-500 hover:bg-teal-400 text-zinc-900 font-bold px-4 py-2.5 rounded-xl transition-colors shadow-lg shadow-teal-500/20"
+              className="flex items-center justify-center gap-2 bg-teal-500 hover:bg-teal-400 text-zinc-900 font-bold px-4 py-2.5 rounded-xl transition-colors shadow-lg shadow-teal-500/20"
             >
               <ArrowDownRight size={18} strokeWidth={2.5} /> Nuevo Ingreso
             </button>

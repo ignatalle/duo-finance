@@ -35,7 +35,7 @@ export function TarjetaReporte({
       <button
         type="button"
         onClick={() => setExpandida(!expandida)}
-        className="w-full p-6 text-left flex flex-col"
+        className="w-full p-4 md:p-6 text-left flex flex-col min-w-0"
       >
         <div className={`w-14 h-14 rounded-2xl ${bg} flex items-center justify-center mb-4`}>
           <Icon className={color} size={28} />
@@ -48,7 +48,7 @@ export function TarjetaReporte({
       </button>
 
       {expandida && (
-        <div className="border-t border-zinc-800 p-6 space-y-4">
+        <div className="border-t border-zinc-800 p-4 md:p-6 space-y-4 min-w-0">
           {children}
           {onExportarPDF && (
             <button

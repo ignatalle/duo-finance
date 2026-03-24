@@ -38,12 +38,12 @@ export function CardTarjetaCredito({ tarjeta, deudaEnCuotas, onEditar, onElimina
     <div
       className={`relative w-[280px] min-w-[280px] h-[160px] rounded-2xl bg-gradient-to-br ${gradiente} p-5 flex flex-col justify-between text-white shadow-xl`}
     >
-      <div className="flex justify-between items-start">
-        <div>
-          {banco && <p className="text-xs font-semibold opacity-90">{banco}</p>}
-          <p className="text-lg font-bold">{tarjeta.nombre}</p>
+      <div className="flex justify-between items-start gap-2 min-w-0">
+        <div className="min-w-0 flex-1">
+          {banco && <p className="text-xs font-semibold opacity-90 truncate">{banco}</p>}
+          <p className="text-lg font-bold truncate">{tarjeta.nombre}</p>
         </div>
-        <div className="relative flex items-center gap-2" ref={menuRef}>
+        <div className="relative flex items-center gap-2 shrink-0" ref={menuRef}>
           <CreditCard size={18} className="opacity-70" />
           {hayAcciones && (
             <>

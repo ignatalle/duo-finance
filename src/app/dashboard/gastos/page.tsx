@@ -4,7 +4,6 @@ import { Suspense } from 'react'
 import { PlanificacionHeader } from '@/components/features/PlanificacionHeader'
 import { PlanificacionFijos } from '@/components/features/PlanificacionFijos'
 import { PlanificacionVariables } from '@/components/features/PlanificacionVariables'
-import { PlanificacionFlujo } from '@/components/features/PlanificacionFlujo'
 import { GastosClient } from './GastosClient'
 import { obtenerConsumoPorCategoria } from '@/app/actions/transacciones'
 import { obtenerPresupuestos } from '@/app/actions/presupuestos'
@@ -49,7 +48,7 @@ export default async function GastosPage(props: { searchParams: Promise<{ mes?: 
       </Suspense>
       <PlanificacionHeader mesParam={mesParam} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         <PlanificacionFijos
           ingresos={ingresos}
           gastosFijos={gastosFijos}
@@ -63,8 +62,8 @@ export default async function GastosPage(props: { searchParams: Promise<{ mes?: 
       </div>
 
       {/* Barra resumen inferior */}
-      <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           <div>
             <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">
               Total fijos (neto)

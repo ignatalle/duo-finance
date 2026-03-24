@@ -25,7 +25,7 @@ export default async function MovimientosPage(props: { searchParams: Promise<{ m
   return (
     <div className="space-y-6">
       <MovimientosHeader mesParam={mesParam} />
-      <div className="rounded-2xl bg-zinc-900/40 border border-zinc-800 p-6">
+      <div className="rounded-2xl bg-zinc-900/40 border border-zinc-800 p-4 md:p-6 min-w-0">
         <ListaTransaccionesMovimientos transacciones={transacciones || []} />
       </div>
     </div>

@@ -16,8 +16,8 @@ export default async function ConfiguracionPage() {
   return (
     <div className="space-y-6 max-w-xl">
       <h1 className="text-2xl font-extrabold tracking-tight text-zinc-50">Configuración</h1>
-      <div className="rounded-[32px] bg-zinc-900/40 border border-zinc-800 p-6">
-        <div className="flex items-center justify-between mb-4">
+      <div className="rounded-[32px] bg-zinc-900/40 border border-zinc-800 p-4 md:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 min-w-0">
           <h2 className="text-lg font-bold text-zinc-100">Cuenta y Pareja</h2>
           <MenuConfiguracion parejaId={perfil?.pareja_id} />
         </div>

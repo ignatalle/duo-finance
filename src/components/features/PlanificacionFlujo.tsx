@@ -47,7 +47,7 @@ export function PlanificacionFlujo({
   const pctResto = Math.max(0, 100 - pctFijos - pctVariables - pctMeta)
 
   return (
-    <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 overflow-hidden relative">
+    <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-6 overflow-hidden relative min-w-0">
       <div
         className="absolute inset-0 opacity-[0.03]"
         style={{
@@ -119,7 +119,7 @@ export function PlanificacionFlujo({
         {gastoDiarioVariables > 0 && (
           <div className="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/50 border border-cyan-500/20">
             <ArrowRight size={20} className="text-cyan-400 shrink-0" />
-            <p className="text-sm text-zinc-400">
+            <p className="text-sm text-zinc-400 break-words min-w-0">
               Podés gastar hasta{' '}
               <span
                 className="text-cyan-300 font-bold [text-shadow:0_0_8px_rgba(34,211,238,0.9),0_0_20px_rgba(34,211,238,0.5)]"

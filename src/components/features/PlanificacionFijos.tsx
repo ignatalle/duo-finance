@@ -26,8 +26,8 @@ export function PlanificacionFijos({ ingresos, gastosFijos, usuarioId }: Planifi
   }
 
   return (
-    <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
-      <div className="flex justify-between items-start mb-6">
+    <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-6 min-w-0">
+      <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-start mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
             <Clock size={20} className="text-blue-400" />
@@ -41,7 +41,7 @@ export function PlanificacionFijos({ ingresos, gastosFijos, usuarioId }: Planifi
           <button
             type="button"
             onClick={modal.openGasto}
-            className="flex items-center gap-1.5 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl text-zinc-300 hover:text-white text-xs font-semibold transition-colors"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl text-zinc-300 hover:text-white text-xs font-semibold transition-colors shrink-0 self-start md:self-auto"
           >
             <Plus size={14} /> Agregar
           </button>
@@ -72,13 +72,13 @@ export function PlanificacionFijos({ ingresos, gastosFijos, usuarioId }: Planifi
               {ingresos.map((t) => (
                 <div
                   key={t.id}
-                  className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl p-4 flex justify-between items-center"
+                  className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl p-4 flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center"
                 >
-                  <div>
-                    <p className="font-semibold text-white">{t.descripcion || t.categoria}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-white break-words">{t.descripcion || t.categoria}</p>
                     <p className="text-xs text-zinc-500 uppercase tracking-wider">{cobroTexto(t)}</p>
                   </div>
-                  <span className="text-emerald-400 font-bold text-lg">
+                  <span className="text-emerald-400 font-bold text-lg shrink-0 sm:text-right">
                     $ {Number(t.monto).toLocaleString('es-AR')}
                   </span>
                 </div>
@@ -93,7 +93,7 @@ export function PlanificacionFijos({ ingresos, gastosFijos, usuarioId }: Planifi
             <ArrowDownRight size={14} className="text-blue-500" /> Gastos mensuales
           </p>
           {gastosFijos.length === 0 ? (
-            <div className="bg-zinc-800/50 border border-dashed border-zinc-600 rounded-xl p-6 flex items-center justify-between gap-4">
+            <div className="bg-zinc-800/50 border border-dashed border-zinc-600 rounded-xl p-4 md:p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-zinc-500 text-sm">No hay gastos fijos configurados...</p>
               {modal && (
                 <button

@@ -94,7 +94,7 @@ export function DashboardSalud({
   const Icon = cfg.icono
 
   return (
-    <div className="flex flex-col justify-center items-center text-center h-full bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
+    <div className="flex flex-col justify-center items-center text-center h-full bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-6 min-w-0">
       <div className={`w-20 h-20 rounded-full ${cfg.colorBg} flex items-center justify-center mb-4`}>
         <Icon size={40} className={cfg.colorIcono} />
       </div>

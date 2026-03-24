@@ -29,7 +29,7 @@ export async function DashboardSaldos({ inicioMes, finMes, mesRef, usuarioId, me
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 relative overflow-hidden">
+      <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-6 relative overflow-hidden min-w-0">
         <p className="text-zinc-500 text-xs font-semibold uppercase tracking-wider mb-2">Saldo Total Contable</p>
         <h3 className={`text-3xl font-bold mb-2 ${saldoTotalContable >= 0 ? 'text-white' : 'text-white'}`}>
           ${saldoTotalContable.toLocaleString('es-AR')}
@@ -39,7 +39,7 @@ export async function DashboardSaldos({ inicioMes, finMes, mesRef, usuarioId, me
         </p>
       </div>
 
-      <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 relative overflow-hidden">
+      <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 md:p-6 relative overflow-hidden min-w-0">
         <p className="text-zinc-500 text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5">
           Saldo Disponible Real <AlertTriangle size={12} className="text-blue-400" />
         </p>

@@ -35,9 +35,9 @@ export function ListaGastosFijos({ gastos, usuarioId }: { gastos: Transaccion[];
         return (
           <div
             key={g.id}
-            className="flex justify-between items-center p-4 bg-zinc-800/50 rounded-xl border border-zinc-700/50 hover:border-zinc-600 transition-colors"
+            className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center p-4 bg-zinc-800/50 rounded-xl border border-zinc-700/50 hover:border-zinc-600 transition-colors min-w-0"
           >
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 min-w-0 flex-1">
               <button
                 type="button"
                 onClick={() => !pagado && handlePagar(g.id, g.descripcion || g.categoria)}
@@ -48,12 +48,12 @@ export function ListaGastosFijos({ gastos, usuarioId }: { gastos: Transaccion[];
               >
                 {pagado && <Check size={14} className="text-white" />}
               </button>
-              <div>
-                <p className="text-white font-medium leading-none mb-1">{g.descripcion || g.categoria}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-white font-medium leading-none mb-1 break-words">{g.descripcion || g.categoria}</p>
                 <p className="text-xs text-zinc-400">Vence: {vto}</p>
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-left md:text-right shrink-0 flex flex-row md:flex-col items-center justify-between md:items-end gap-2 pt-2 border-t border-zinc-700/40 md:border-0 md:pt-0">
               <p className="text-white font-bold">- $ {g.monto.toLocaleString('es-AR')}</p>
               <span
                 className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${

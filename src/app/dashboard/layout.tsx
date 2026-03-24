@@ -56,7 +56,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Main content */}
       <main className="md:pl-72 pb-24 md:pb-8">
         <DashboardShell>
-          <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6">{children}</div>
+          <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-4 md:py-6">{children}</div>
         </DashboardShell>
       </main>
 

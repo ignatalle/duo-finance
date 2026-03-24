@@ -22,13 +22,13 @@ export default async function ReportesPage(props: { searchParams: Promise<{ mes?
           <h2 className="text-2xl font-bold text-white">Reportes y PDF</h2>
           <p className="text-zinc-400 text-sm">Resúmenes con datos reales. Exportá a CSV o descargá como PDF.</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3 min-w-0 w-full sm:w-auto">
           <SelectorMes />
           <BotonExportar mesActual={mesParam} />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         <ReporteResumenMensual mesParam={mesParam} />
         <ReporteEstadoTarjetas />
         <ReporteBalanceAnual anio={anio} />

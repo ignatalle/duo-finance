@@ -328,7 +328,7 @@ export function DashboardGrafico({
   const handleMouseLeave = useCallback(() => setTooltip(null), [])
 
   return (
-    <div className="relative bg-zinc-900/60 rounded-2xl border border-zinc-800 overflow-hidden p-4 min-h-[220px] flex flex-col md:col-span-2">
+    <div className="relative bg-zinc-900/60 rounded-2xl border border-zinc-800 overflow-hidden p-4 md:p-5 min-h-[220px] flex flex-col md:col-span-2 min-w-0">
       <div
         className="absolute inset-0 opacity-20"
         style={{
@@ -353,7 +353,7 @@ export function DashboardGrafico({
                 key={op.valor}
                 type="button"
                 onClick={() => setVista(op.valor)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                className={`flex shrink-0 items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
                   vista === op.valor
                     ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                     : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
@@ -480,7 +480,7 @@ export function DashboardGrafico({
           ) : (
             <p className="text-xs text-zinc-500">No hay saldo disponible para gastar este mes.</p>
           )}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 min-w-0">
             <PiggyBank size={14} className="text-teal-400 shrink-0" />
             <input
               type="text"
@@ -488,13 +488,13 @@ export function DashboardGrafico({
               placeholder="Quiero ahorrar ej: 50000"
               value={metaInput}
               onChange={(e) => setMetaInput(e.target.value)}
-              className="flex-1 text-sm bg-zinc-800/80 border border-zinc-700 rounded-lg px-3 py-2 text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+              className="min-w-0 flex-1 basis-[min(100%,12rem)] text-sm bg-zinc-800/80 border border-zinc-700 rounded-lg px-3 py-2 text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
             />
             <button
               type="button"
               onClick={handleGuardar}
               disabled={guardando}
-              className="px-3 py-2 text-xs font-semibold rounded-lg bg-teal-600 hover:bg-teal-500 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="shrink-0 px-3 py-2 text-xs font-semibold rounded-lg bg-teal-600 hover:bg-teal-500 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {guardando ? '...' : 'Guardar'}
             </button>
