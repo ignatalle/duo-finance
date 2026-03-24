@@ -24,6 +24,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Duo Finance - Presupuesto en pareja",
   description: "Gestiona gastos, ingresos y saldos compartidos con tu pareja.",
+  manifest: "/manifest.json",
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Duo Finance" },
+  themeColor: "#10b981",
+  formatDetection: { telephone: false },
 };
 
 export default function RootLayout({

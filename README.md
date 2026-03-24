@@ -66,7 +66,7 @@ Abrir [http://localhost:3000](http://localhost:3000).
 - Categorías personalizadas
 - Integración bancaria / Open Banking
 - Categorización automática con IA
-- PWA, tests e2e
+- tests e2e
 
 ---
 
@@ -101,6 +101,10 @@ supabase db push
 ```
 
 O ejecutar los SQL en el **SQL Editor** del Dashboard de Supabase.
+
+### Despliegue e instalación en celu
+
+Ver **[docs/DEPLOY.md](./docs/DEPLOY.md)** para subir a Vercel e instalar como app en el celular (PWA).
 
 ### Documentación completa
 
