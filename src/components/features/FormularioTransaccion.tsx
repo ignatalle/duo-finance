@@ -334,15 +334,22 @@ export function FormularioTransaccion({ isOpen: controlledOpen, onOpenChange, in
                       </div>
                       <div>
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">Cuotas</label>
-                        <select
+                        <input
+                          type="number"
+                          min={1}
+                          max={120}
                           value={cuotas}
-                          onChange={(e) => setCuotas(parseInt(e.target.value))}
+                          onChange={(e) => {
+                            const v = parseInt(e.target.value, 10)
+                            if (Number.isNaN(v)) {
+                              setCuotas(1)
+                              return
+                            }
+                            setCuotas(Math.min(120, Math.max(1, v)))
+                          }}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 font-medium focus:ring-2 focus:ring-slate-800 focus:border-slate-800 outline-none"
-                        >
-                          {[1, 2, 3, 6, 9, 12, 18, 24].map((n) => (
-                            <option key={n} value={n}>{n === 1 ? '1 cuota (contado)' : `${n} cuotas`}</option>
-                          ))}
-                        </select>
+                        />
+                        <p className="text-[10px] text-slate-400 mt-1">1 = contado. Hasta 120 cuotas.</p>
                       </div>
                     </>
                   )}

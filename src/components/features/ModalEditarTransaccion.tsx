@@ -2,7 +2,9 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import { editarTransaccion } from '@/app/actions/transacciones'
-import { X, Loader2, User, Users } from 'lucide-react'
+import { obtenerTarjetas } from '@/app/actions/tarjetas'
+import type { Tarjeta } from '@/app/actions/tarjetas'
+import { X, Loader2, User, Users, Banknote, CreditCard } from 'lucide-react'
 import { format } from 'date-fns'
 import type { Transaccion } from '@/types'
 
@@ -28,6 +30,9 @@ export function ModalEditarTransaccion({ transaccion, onClose, onSuccess }: Moda
   const [esCompartido, setEsCompartido] = useState(false)
   const [tipoGasto, setTipoGasto] = useState<'fijo' | 'variable'>('variable')
   const [estado, setEstado] = useState<'pagado' | 'pendiente'>('pagado')
+  const [tarjetas, setTarjetas] = useState<Tarjeta[]>([])
+  const [tarjetaId, setTarjetaId] = useState('')
+  const [cuotas, setCuotas] = useState(1)
 
   useEffect(() => {
     if (!transaccion) return
@@ -38,6 +43,17 @@ export function ModalEditarTransaccion({ transaccion, onClose, onSuccess }: Moda
     setEsCompartido(transaccion.es_compartido ?? false)
     setTipoGasto((transaccion.tipo_gasto as 'fijo' | 'variable') || 'variable')
     setEstado((transaccion.estado as 'pagado' | 'pendiente') || 'pagado')
+    const tidInicial = transaccion.tarjeta_id || ''
+    setTarjetaId(tidInicial)
+    setCuotas(transaccion.cuota_total && transaccion.cuota_total > 0 ? transaccion.cuota_total : 1)
+
+    obtenerTarjetas().then((res) => {
+      const data = res.data || []
+      setTarjetas(data)
+      if (tidInicial && !data.some((t) => t.id === tidInicial)) {
+        setTarjetaId('')
+      }
+    })
   }, [transaccion])
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -53,6 +69,29 @@ export function ModalEditarTransaccion({ transaccion, onClose, onSuccess }: Moda
     formData.set('estado', estado)
     formData.set('tipo_gasto', tipoGasto)
     if (esCompartido) formData.set('es_compartido', 'on')
+
+    if (transaccion.tipo === 'gasto') {
+      if (tarjetaId) {
+        formData.set('tarjeta_id', tarjetaId)
+        if (cuotas > 1) {
+          formData.set('cuota_total', String(cuotas))
+          const sinCuotasAntes =
+            transaccion.cuota_total == null || transaccion.cuota_total <= 1
+          if (sinCuotasAntes) {
+            formData.set('cuota_actual', '1')
+          } else if (transaccion.cuota_actual != null) {
+            formData.set(
+              'cuota_actual',
+              String(Math.min(transaccion.cuota_actual, cuotas))
+            )
+          } else {
+            formData.set('cuota_actual', '1')
+          }
+        }
+      } else {
+        formData.set('tarjeta_id', '')
+      }
+    }
 
     startTransition(async () => {
       const result = await editarTransaccion(formData)
@@ -158,6 +197,73 @@ export function ModalEditarTransaccion({ transaccion, onClose, onSuccess }: Moda
                   </button>
                 </div>
               </div>
+
+              <div>
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">¿En tarjeta?</label>
+                <div className="flex bg-zinc-800 p-1 rounded-xl border border-zinc-700">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTarjetaId('')
+                      setCuotas(1)
+                    }}
+                    className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-2 text-sm font-bold transition-all ${!tarjetaId ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-500'}`}
+                  >
+                    <Banknote size={16} /> Efectivo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => tarjetas.length > 0 && setTarjetaId(tarjetas[0].id)}
+                    className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-2 text-sm font-bold transition-all ${tarjetaId ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-500'}`}
+                  >
+                    <CreditCard size={16} /> Tarjeta
+                  </button>
+                </div>
+              </div>
+
+              {tarjetaId && tarjetas.length > 0 && (
+                <>
+                  <div>
+                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1 block">Tarjeta</label>
+                    <select
+                      value={tarjetaId}
+                      onChange={(e) => setTarjetaId(e.target.value)}
+                      className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 outline-none"
+                    >
+                      {tarjetas.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.nombre}
+                          {t.ultimos_digitos != null ? ` ****${String(t.ultimos_digitos).padStart(4, '0')}` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1 block">Cuotas</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={120}
+                      value={cuotas}
+                      onChange={(e) => {
+                        const v = parseInt(e.target.value, 10)
+                        if (Number.isNaN(v)) {
+                          setCuotas(1)
+                          return
+                        }
+                        setCuotas(Math.min(120, Math.max(1, v)))
+                      }}
+                      className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white font-medium focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 outline-none"
+                    />
+                    <p className="text-[10px] text-zinc-500 mt-1">1 = contado. Hasta 120 cuotas.</p>
+                  </div>
+                </>
+              )}
+              {tarjetaId && tarjetas.length === 0 && (
+                <p className="text-xs text-amber-400">
+                  No tenés tarjetas vinculadas. Andá a Tarjetas para agregar una.
+                </p>
+              )}
 
               <div>
                 <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">Propiedad</label>

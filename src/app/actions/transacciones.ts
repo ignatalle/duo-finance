@@ -152,6 +152,28 @@ export async function editarTransaccion(formData: FormData) {
     es_compartido: formData.get('es_compartido') === 'on',
   }
 
+  if (tipo === 'gasto') {
+    const tarjetaRaw = formData.get('tarjeta_id') as string | null
+    if (tarjetaRaw && tarjetaRaw.trim() !== '') {
+      datos.tarjeta_id = tarjetaRaw.trim()
+      const cuotaTotalRaw = formData.get('cuota_total') as string | null
+      const nTotal = cuotaTotalRaw != null && cuotaTotalRaw !== '' ? parseInt(cuotaTotalRaw, 10) : NaN
+      if (Number.isFinite(nTotal) && nTotal > 1) {
+        datos.cuota_total = nTotal
+        const cuotaActRaw = formData.get('cuota_actual') as string | null
+        const nAct = cuotaActRaw != null && cuotaActRaw !== '' ? parseInt(cuotaActRaw, 10) : NaN
+        datos.cuota_actual = Number.isFinite(nAct) && nAct >= 1 ? nAct : 1
+      } else {
+        datos.cuota_total = null
+        datos.cuota_actual = null
+      }
+    } else {
+      datos.tarjeta_id = null
+      datos.cuota_total = null
+      datos.cuota_actual = null
+    }
+  }
+
   if (fechaStr) {
     datos.created_at = new Date(fechaStr + 'T12:00:00').toISOString()
   }
