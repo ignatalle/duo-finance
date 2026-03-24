@@ -51,7 +51,7 @@ export function DashboardHeader({ userName }: { userName?: string }) {
         )}
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2">
+          <div className="hidden md:flex items-center gap-2 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2">
             <CalendarDays size={18} className="text-zinc-400" />
             <input
               type="month"
