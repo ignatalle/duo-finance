@@ -135,56 +135,146 @@ export async function editarTransaccion(formData: FormData) {
   if (!user) throw new Error('Usuario no autenticado')
 
   const id = formData.get('id') as string
-  const tipo = (formData.get('tipo') as string) || 'gasto'
+  if (!id?.trim()) {
+    return { error: 'ID inválido' }
+  }
+
+  const { data: original, error: errOriginal } = await supabase
+    .from('transacciones')
+    .select('id, tipo, descripcion, cuota_total, cuota_actual')
+    .eq('id', id)
+    .eq('usuario_id', user.id)
+    .single()
+
+  if (errOriginal || !original) {
+    console.error('editarTransaccion: fila no encontrada', errOriginal)
+    return { error: 'Movimiento no encontrado' }
+  }
+
+  const tipo = (formData.get('tipo') as string) || original.tipo
   const monto = parseFloat(formData.get('monto') as string)
   const fechaStr = formData.get('fecha') as string | null
 
   if (Number.isNaN(monto) || monto <= 0) {
     return { error: 'Monto inválido' }
   }
-
-  const datos: Record<string, unknown> = {
-    monto,
-    categoria: formData.get('categoria') as string,
-    descripcion: (formData.get('descripcion') as string) || '',
-    estado: (formData.get('estado') as string) || 'pagado',
-    tipo_gasto: tipo === 'gasto' ? (formData.get('tipo_gasto') as string) || null : null,
-    es_compartido: formData.get('es_compartido') === 'on',
+  if (!['ingreso', 'gasto'].includes(tipo)) {
+    return { error: 'Tipo de transacción inválido' }
   }
+
+  const categoria = formData.get('categoria') as string
+  const descripcionNueva = (formData.get('descripcion') as string) || ''
+  const estadoNuevo = (formData.get('estado') as string) || 'pagado'
+  const tipoGasto = tipo === 'gasto' ? (formData.get('tipo_gasto') as string) || null : null
+  const esCompartido = formData.get('es_compartido') === 'on'
+
+  /** Tarjeta y cuotas tal como vienen del FormData (solo gastos) */
+  let tarjetaId: string | null = null
+  let cuotaTotalEditada: number | null = null
+  let cuotaActualFila: number | null = null
 
   if (tipo === 'gasto') {
     const tarjetaRaw = formData.get('tarjeta_id') as string | null
     if (tarjetaRaw && tarjetaRaw.trim() !== '') {
-      datos.tarjeta_id = tarjetaRaw.trim()
+      tarjetaId = tarjetaRaw.trim()
       const cuotaTotalRaw = formData.get('cuota_total') as string | null
       const nTotal = cuotaTotalRaw != null && cuotaTotalRaw !== '' ? parseInt(cuotaTotalRaw, 10) : NaN
       if (Number.isFinite(nTotal) && nTotal > 1) {
-        datos.cuota_total = nTotal
+        cuotaTotalEditada = nTotal
         const cuotaActRaw = formData.get('cuota_actual') as string | null
         const nAct = cuotaActRaw != null && cuotaActRaw !== '' ? parseInt(cuotaActRaw, 10) : NaN
-        datos.cuota_actual = Number.isFinite(nAct) && nAct >= 1 ? nAct : 1
-      } else {
-        datos.cuota_total = null
-        datos.cuota_actual = null
+        cuotaActualFila = Number.isFinite(nAct) && nAct >= 1 ? nAct : 1
       }
-    } else {
-      datos.tarjeta_id = null
-      datos.cuota_total = null
-      datos.cuota_actual = null
     }
   }
 
-  if (fechaStr) {
-    datos.created_at = new Date(fechaStr + 'T12:00:00').toISOString()
+  const originalTeniaPlan =
+    original.tipo === 'gasto' &&
+    original.cuota_total != null &&
+    original.cuota_total > 1
+  const editadaTienePlan = cuotaTotalEditada != null && cuotaTotalEditada > 1
+
+  const datosCompartidos: Record<string, unknown> = {
+    monto,
+    categoria,
+    descripcion: descripcionNueva,
+    es_compartido: esCompartido,
+    tipo_gasto: tipoGasto,
   }
 
-  const { error } = await supabase.from('transacciones').update(datos).eq('id', id).eq('usuario_id', user.id)
-  if (error) {
-    console.error('Error editando transacción:', error)
+  if (tipo === 'gasto') {
+    datosCompartidos.tarjeta_id = tarjetaId
+    if (editadaTienePlan) {
+      datosCompartidos.cuota_total = cuotaTotalEditada
+    } else {
+      datosCompartidos.cuota_total = null
+      datosCompartidos.cuota_actual = null
+    }
+  } else {
+    datosCompartidos.tarjeta_id = null
+    datosCompartidos.cuota_total = null
+    datosCompartidos.cuota_actual = null
+  }
+
+  const datosSoloEstaFila: Record<string, unknown> = {
+    estado: estadoNuevo,
+  }
+  if (tipo === 'gasto' && editadaTienePlan && cuotaActualFila != null) {
+    datosSoloEstaFila.cuota_actual = cuotaActualFila
+  }
+  if (fechaStr) {
+    datosSoloEstaFila.created_at = new Date(fechaStr + 'T12:00:00').toISOString()
+  }
+
+  let idsGrupo: string[] = [id]
+
+  if (tipo === 'gasto' && originalTeniaPlan) {
+    const ctOrig = original.cuota_total as number
+    const descClave = original.descripcion ?? ''
+    const { data: hermanas, error: errHermanas } = await supabase
+      .from('transacciones')
+      .select('id, descripcion')
+      .eq('usuario_id', user.id)
+      .eq('tipo', 'gasto')
+      .eq('cuota_total', ctOrig)
+
+    if (errHermanas) {
+      console.error('Error buscando cuotas hermanas:', errHermanas)
+      return { error: 'No se pudieron buscar las cuotas relacionadas' }
+    }
+
+    idsGrupo = (hermanas || [])
+      .filter((row) => (row.descripcion ?? '') === descClave)
+      .map((row) => row.id)
+
+    if (idsGrupo.length === 0) idsGrupo = [id]
+  }
+
+  const { error: errorBulk } = await supabase
+    .from('transacciones')
+    .update(datosCompartidos)
+    .in('id', idsGrupo)
+    .eq('usuario_id', user.id)
+
+  if (errorBulk) {
+    console.error('Error actualizando transacciones (grupo):', errorBulk)
     return { error: 'No se pudo editar' }
   }
+
+  const { error: errorFila } = await supabase
+    .from('transacciones')
+    .update(datosSoloEstaFila)
+    .eq('id', id)
+    .eq('usuario_id', user.id)
+
+  if (errorFila) {
+    console.error('Error actualizando transacción (fila):', errorFila)
+    return { error: 'No se pudo editar' }
+  }
+
   revalidatePath('/dashboard')
   revalidatePath('/dashboard/movimientos')
+  revalidatePath('/dashboard/tarjetas')
   return { success: true }
 }
 
