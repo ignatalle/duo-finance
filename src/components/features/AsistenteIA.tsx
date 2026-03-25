@@ -44,7 +44,7 @@ export function AsistenteIA({ isOpen = false, onClose }: { isOpen?: boolean; onC
   return (
     <>
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-[400px] max-w-[calc(100vw-3rem)] h-[550px] bg-zinc-900/95 backdrop-blur-xl border border-indigo-500/30 rounded-2xl shadow-2xl shadow-indigo-500/20 flex flex-col z-[60] overflow-hidden animate-[slideUp_0.3s_ease-out]">
+        <div className="fixed bottom-6 right-6 w-[400px] max-w-[calc(100vw-3rem)] h-[550px] max-h-[85dvh] bg-zinc-900/95 backdrop-blur-xl border border-indigo-500/30 rounded-2xl shadow-2xl shadow-indigo-500/20 flex flex-col z-[60] min-h-0 overflow-hidden animate-[slideUp_0.3s_ease-out]">
           <div className="bg-gradient-to-r from-indigo-600 to-indigo-800 p-4 flex justify-between items-center shadow-md">
             <h3 className="font-bold text-white flex items-center gap-2">
               <MessageSquare size={18} /> Asistente IA
@@ -84,7 +84,7 @@ export function AsistenteIA({ isOpen = false, onClose }: { isOpen?: boolean; onC
             )}
           </div>
 
-          <form onSubmit={handleSubmit} className="p-3 border-t border-zinc-800 bg-zinc-950">
+          <form onSubmit={handleSubmit} className="p-3 pb-4 border-t border-zinc-800 bg-zinc-950 shrink-0">
             <div className="flex relative">
               <input
                 type="text"

@@ -145,7 +145,7 @@ export function FormularioTransaccion({ isOpen: controlledOpen, onOpenChange, in
             onClick={() => setIsOpen(false)}
           />
           
-          <div className="relative w-full max-w-sm max-h-[90vh] overflow-y-auto bg-white rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-200 z-10 border border-slate-100">
+          <div className="relative w-full max-w-sm max-h-[85dvh] overflow-y-auto bg-white rounded-3xl p-6 pb-8 shadow-2xl animate-in zoom-in-95 duration-200 z-10 border border-slate-100">
             
             <div className="relative flex justify-center items-center mb-5">
               <h2 className="text-xl font-bold text-slate-800 tracking-tight">

@@ -38,7 +38,7 @@ export function ModalConfirmarEliminarPresupuesto({
         onClick={onClose}
         aria-hidden
       />
-      <div className="relative w-full max-w-sm bg-zinc-900 border border-zinc-700 rounded-2xl p-6 shadow-2xl z-10">
+      <div className="relative w-full max-w-sm max-h-[85dvh] overflow-y-auto bg-zinc-900 border border-zinc-700 rounded-2xl p-6 pb-8 shadow-2xl z-10">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-bold text-white">Eliminar presupuesto</h2>
           <button

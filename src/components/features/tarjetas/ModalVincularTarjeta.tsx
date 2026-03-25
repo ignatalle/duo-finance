@@ -85,7 +85,7 @@ export function ModalVincularTarjeta({ isOpen, onClose, tarjetaEditar }: ModalVi
   return (
     <>
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" onClick={onClose} />
-      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl z-50 p-6 max-h-[90vh] overflow-y-auto">
+      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md max-h-[85dvh] overflow-y-auto bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl z-50 p-6 pb-8">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-bold text-white">{esEdicion ? 'Editar Tarjeta' : 'Vincular Tarjeta'}</h3>
           <button

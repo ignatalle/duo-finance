@@ -30,7 +30,7 @@ export function ModalConfirmarEliminarTarjeta({ tarjetaNombre, tarjetaId, onClos
   return (
     <>
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" onClick={onClose} />
-      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl z-50 p-6">
+      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm max-h-[85dvh] overflow-y-auto bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl z-50 p-6 pb-8">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-bold text-white">Eliminar tarjeta</h3>
           <button
