@@ -138,14 +138,20 @@ export function FormularioTransaccion({ isOpen: controlledOpen, onOpenChange, in
 
       {/* MODAL CENTRADO Y COMPACTO */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
           {/* Fondo oscuro con desenfoque sutil */}
           <div 
             className="absolute inset-0 bg-slate-800/20 backdrop-blur-[2px] transition-opacity animate-in fade-in duration-200"
             onClick={() => setIsOpen(false)}
+            aria-hidden
           />
           
-          <div className="relative w-full max-w-sm max-h-[85dvh] overflow-y-auto bg-white rounded-3xl p-6 pb-8 shadow-2xl animate-in zoom-in-95 duration-200 z-10 border border-slate-100">
+          <div
+            className="relative z-10 w-full max-w-sm max-h-[85dvh] overflow-y-auto origin-bottom sm:origin-center bg-white rounded-3xl p-6 pb-8 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200 ease-out motion-reduce:animate-none"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
             
             <div className="relative flex justify-center items-center mb-5">
               <h2 className="text-xl font-bold text-slate-800 tracking-tight">

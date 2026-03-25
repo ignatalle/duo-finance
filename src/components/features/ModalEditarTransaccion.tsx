@@ -107,15 +107,23 @@ export function ModalEditarTransaccion({ transaccion, onClose, onSuccess }: Moda
   if (!transaccion) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-zinc-900/60 backdrop-blur-sm"
         onClick={onClose}
         aria-hidden
       />
-      <div className="relative w-full max-w-sm max-h-[85dvh] overflow-y-auto bg-zinc-900 border border-zinc-700 rounded-2xl p-6 pb-8 shadow-2xl z-10">
+      <div
+        className="relative z-10 w-full max-w-sm max-h-[85dvh] overflow-y-auto origin-bottom sm:origin-center bg-zinc-900 border border-zinc-700 rounded-2xl p-6 pb-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200 ease-out motion-reduce:animate-none"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-editar-transaccion-title"
+      >
         <div className="flex justify-between items-center mb-5">
-          <h2 className="text-lg font-bold text-white">Editar movimiento</h2>
+          <h2 id="modal-editar-transaccion-title" className="text-lg font-bold text-white">
+            Editar movimiento
+          </h2>
           <button
             type="button"
             onClick={onClose}

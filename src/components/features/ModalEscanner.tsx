@@ -195,8 +195,13 @@ export function ModalEscanner({ isOpen, onClose }: ModalEscannerProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
-      <div className="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-md p-6 pb-8 shadow-2xl relative max-h-[85dvh] flex flex-col overflow-y-auto overflow-x-hidden">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/70 backdrop-blur-md"
+        onClick={handleClose}
+        aria-hidden
+      />
+      <div className="relative z-10 w-full max-w-md max-h-[85dvh] flex flex-col overflow-y-auto overflow-x-hidden origin-bottom sm:origin-center bg-zinc-900 border border-zinc-700 rounded-2xl p-6 pb-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200 ease-out motion-reduce:animate-none">
         <button
           onClick={handleClose}
           className="absolute top-4 right-4 text-zinc-400 hover:text-white z-10"
