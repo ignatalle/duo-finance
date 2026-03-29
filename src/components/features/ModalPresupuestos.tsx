@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { X } from 'lucide-react'
 import { guardarPresupuesto } from '@/app/actions/presupuestos'
@@ -34,6 +34,9 @@ export function ModalPresupuestos({
   const [limite, setLimite] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const categoriaRef = useRef(categoria)
+  categoriaRef.current = categoria
+  const didInitForOpenRef = useRef(false)
 
   const catParam = searchParams.get('cat')
     ? decodeURIComponent(searchParams.get('cat')!)
@@ -41,20 +44,26 @@ export function ModalPresupuestos({
   const editId = searchParams.get('edit')
 
   useEffect(() => {
-    if (isOpen) {
-      setError(null)
-      if (editId) {
-        const existente = presupuestosExistentes.find((p) => p.id === editId)
-        if (existente) {
-          setCategoria(existente.categoria)
-          setLimite(String(existente.limite_mensual))
-        }
-      } else {
-        const catInicial = catParam && CATEGORIAS_GASTO.includes(catParam) ? catParam : categoria
-        if (catParam && CATEGORIAS_GASTO.includes(catParam)) setCategoria(catParam)
-        const existente = presupuestosExistentes.find((p) => p.categoria === (catParam && CATEGORIAS_GASTO.includes(catParam) ? catParam : categoria))
-        setLimite(existente ? String(existente.limite_mensual) : '')
+    if (!isOpen) {
+      didInitForOpenRef.current = false
+      return
+    }
+    if (didInitForOpenRef.current) return
+    didInitForOpenRef.current = true
+
+    setError(null)
+    if (editId) {
+      const existente = presupuestosExistentes.find((p) => p.id === editId)
+      if (existente) {
+        setCategoria(existente.categoria)
+        setLimite(String(existente.limite_mensual))
       }
+    } else {
+      if (catParam && CATEGORIAS_GASTO.includes(catParam)) setCategoria(catParam)
+      const catLookup =
+        catParam && CATEGORIAS_GASTO.includes(catParam) ? catParam : categoriaRef.current
+      const existente = presupuestosExistentes.find((p) => p.categoria === catLookup)
+      setLimite(existente ? String(existente.limite_mensual) : '')
     }
   }, [isOpen, presupuestosExistentes, catParam, editId])
 

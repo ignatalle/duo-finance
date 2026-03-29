@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { MSG_NO_AUTH } from '@/lib/actionAuth'
 
 export interface Tarjeta {
   id: string
@@ -17,21 +18,26 @@ export interface Tarjeta {
 }
 
 export async function obtenerTarjetas() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'No autenticado', data: null }
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { data: null, error: MSG_NO_AUTH }
 
-  const { data, error } = await supabase
-    .from('tarjetas')
-    .select('*')
-    .eq('usuario_id', user.id)
-    .order('created_at', { ascending: false })
+    const { data, error } = await supabase
+      .from('tarjetas')
+      .select('*')
+      .eq('usuario_id', user.id)
+      .order('created_at', { ascending: false })
 
-  if (error) {
-    console.error('Error obteniendo tarjetas:', error)
-    return { error: error.message, data: null }
+    if (error) {
+      console.error('Error obteniendo tarjetas:', error)
+      return { data: null, error: 'No se pudieron cargar las tarjetas' }
+    }
+    return { data: data as Tarjeta[] || [], error: null }
+  } catch (e) {
+    console.error('obtenerTarjetas:', e)
+    return { data: null, error: 'No se pudieron cargar las tarjetas' }
   }
-  return { data: data as Tarjeta[] || [], error: null }
 }
 
 export async function crearTarjeta(formData: FormData) {
@@ -78,7 +84,7 @@ export async function crearTarjeta(formData: FormData) {
 export async function editarTarjeta(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado')
+  if (!user) return { success: false, error: MSG_NO_AUTH }
 
   const id = formData.get('id') as string
   const nombre = formData.get('nombre') as string
@@ -116,7 +122,7 @@ export async function editarTarjeta(formData: FormData) {
 export async function eliminarTarjeta(id: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado')
+  if (!user) return { success: false, error: MSG_NO_AUTH }
 
   const { error } = await supabase
     .from('tarjetas')

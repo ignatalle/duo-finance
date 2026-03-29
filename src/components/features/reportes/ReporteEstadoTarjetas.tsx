@@ -10,12 +10,14 @@ const formatearMonto = (n: number) =>
   new Intl.NumberFormat('es-AR', { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n)
 
 export function ReporteEstadoTarjetas() {
-  const [data, setData] = useState<Awaited<ReturnType<typeof obtenerEstadoTarjetas>>>(null)
+  const [data, setData] = useState<Awaited<ReturnType<typeof obtenerEstadoTarjetas>>['data']>(null)
+  const [fetchError, setFetchError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     obtenerEstadoTarjetas().then((r) => {
-      setData(r)
+      setData(r.data)
+      setFetchError(r.error)
       setLoading(false)
     })
   }, [])
@@ -55,6 +57,14 @@ export function ReporteEstadoTarjetas() {
   }
 
   if (loading) return <TarjetaReporte title="Estado de Tarjetas" desc="Cuotas pendientes y proyecciones." icon={CreditCard} color="text-indigo-400" bg="bg-indigo-500/10"><p className="text-zinc-500 text-sm">Cargando...</p></TarjetaReporte>
+
+  if (fetchError || !data) {
+    return (
+      <TarjetaReporte title="Estado de Tarjetas" desc="Cuotas pendientes y proyecciones." icon={CreditCard} color="text-indigo-400" bg="bg-indigo-500/10">
+        <p className="text-rose-400 text-sm">{fetchError || 'No se pudo cargar el estado de tarjetas.'}</p>
+      </TarjetaReporte>
+    )
+  }
 
   return (
     <TarjetaReporte

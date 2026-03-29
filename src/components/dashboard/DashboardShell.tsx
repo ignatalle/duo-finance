@@ -31,6 +31,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         onAsistente={() => setAsistenteOpen(true)}
       />
       <FormularioTransaccion
+        key={modalTipo ?? 'closed'}
         isOpen={modalTipo !== null}
         onOpenChange={(open) => !open && setModalTipo(null)}
         initialTipo={modalTipo ?? 'gasto'}

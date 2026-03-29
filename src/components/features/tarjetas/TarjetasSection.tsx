@@ -124,6 +124,7 @@ export function TarjetasSection({
       )}
 
       <ModalVincularTarjeta
+        key={`${modalOpen}-${tarjetaAEditar?.id ?? 'new'}`}
         isOpen={modalOpen}
         onClose={closeModal}
         tarjetaEditar={tarjetaAEditar}
@@ -138,6 +139,7 @@ export function TarjetasSection({
 
       {txEditar && (
         <ModalEditarTransaccion
+          key={txEditar.id}
           transaccion={txEditar}
           onClose={() => setTxEditar(null)}
           onSuccess={() => router.refresh()}

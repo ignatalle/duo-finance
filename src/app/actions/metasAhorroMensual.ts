@@ -2,25 +2,31 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { MSG_NO_AUTH } from '@/lib/actionAuth'
 
 /** Obtiene la meta de ahorro guardada para un mes */
 export async function obtenerMetaAhorroMensual(mesRef: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { data: 0, error: 'No autenticado' }
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { data: 0, error: MSG_NO_AUTH }
 
-  const { data, error } = await supabase
-    .from('metas_ahorro_mensual')
-    .select('monto')
-    .eq('usuario_id', user.id)
-    .eq('mes_ref', mesRef)
-    .maybeSingle()
+    const { data, error } = await supabase
+      .from('metas_ahorro_mensual')
+      .select('monto')
+      .eq('usuario_id', user.id)
+      .eq('mes_ref', mesRef)
+      .maybeSingle()
 
-  if (error) {
-    console.error('Error obteniendo meta ahorro:', error)
-    return { data: 0, error: error.message }
+    if (error) {
+      console.error('Error obteniendo meta ahorro:', error)
+      return { data: 0, error: 'No se pudo cargar la meta de ahorro' }
+    }
+    return { data: Number(data?.monto ?? 0), error: null }
+  } catch (e) {
+    console.error('obtenerMetaAhorroMensual:', e)
+    return { data: 0, error: 'No se pudo cargar la meta de ahorro' }
   }
-  return { data: Number(data?.monto ?? 0), error: null }
 }
 
 /** Guarda la meta de ahorro para un mes (upsert) */
@@ -62,7 +68,7 @@ export async function guardarMetaAhorroMensual(mesRef: string, monto: number) {
 
   if (error) {
     console.error('Error guardando meta ahorro:', error)
-    return { success: false, error: error.message }
+    return { success: false, error: 'No se pudo guardar la meta de ahorro' }
   }
 
   revalidatePath('/dashboard')

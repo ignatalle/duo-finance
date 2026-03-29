@@ -10,18 +10,20 @@ const formatearMonto = (n: number) =>
   new Intl.NumberFormat('es-AR', { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n)
 
 export function ReporteBalanceAnual({ anio }: { anio: string }) {
-  const [data, setData] = useState<Awaited<ReturnType<typeof obtenerBalanceAnual>>>([])
+  const [data, setData] = useState<Awaited<ReturnType<typeof obtenerBalanceAnual>>['data']>(null)
+  const [fetchError, setFetchError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     obtenerBalanceAnual(anio).then((r) => {
-      setData(r)
+      setData(r.data)
+      setFetchError(r.error)
       setLoading(false)
     })
   }, [anio])
 
   const handlePdf = () => {
-    if (data.length === 0) return
+    if (!data || data.length === 0) return
     const totalIngresos = data.reduce((a, m) => a + m.ingresos, 0)
     const totalGastos = data.reduce((a, m) => a + m.gastos, 0)
     const html = `
@@ -52,11 +54,20 @@ export function ReporteBalanceAnual({ anio }: { anio: string }) {
     descargarComoPdf(`Balance Anual ${anio}`, html)
   }
 
-  const totalIngresos = data.reduce((a, m) => a + m.ingresos, 0)
-  const totalGastos = data.reduce((a, m) => a + m.gastos, 0)
+  const rows = data ?? []
+  const totalIngresos = rows.reduce((a, m) => a + m.ingresos, 0)
+  const totalGastos = rows.reduce((a, m) => a + m.gastos, 0)
   const balanceAnual = totalIngresos - totalGastos
 
   if (loading) return <TarjetaReporte title="Balance Anual" desc="Evolución de tu patrimonio mes a mes." icon={TrendingUp} color="text-emerald-400" bg="bg-emerald-500/10"><p className="text-zinc-500 text-sm">Cargando...</p></TarjetaReporte>
+
+  if (fetchError || !data) {
+    return (
+      <TarjetaReporte title="Balance Anual" desc="Evolución de tu patrimonio mes a mes." icon={TrendingUp} color="text-emerald-400" bg="bg-emerald-500/10">
+        <p className="text-rose-400 text-sm">{fetchError || 'No se pudo cargar el balance.'}</p>
+      </TarjetaReporte>
+    )
+  }
 
   return (
     <TarjetaReporte
@@ -86,7 +97,7 @@ export function ReporteBalanceAnual({ anio }: { anio: string }) {
         </div>
         <div className="space-y-2 max-h-40 overflow-y-auto">
           <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Por mes</p>
-          {data.map((m) => (
+          {rows.map((m) => (
             <div key={m.mes} className="flex justify-between text-sm py-1">
               <span className="text-zinc-400">{m.mesNombre}</span>
               <span className={m.saldo >= 0 ? 'text-teal-400' : 'text-rose-400'}>

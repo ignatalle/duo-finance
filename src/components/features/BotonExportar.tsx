@@ -12,8 +12,15 @@ export function BotonExportar({ mesActual }: { mesActual: string }) {
 
   const descargarCSV = async (rango: 'mes' | 'anio') => {
     setLoading(true)
-    const { data } = await obtenerDatosExportacion(rango, mesActual)
-    
+    const { data, error } = await obtenerDatosExportacion(rango, mesActual)
+
+    if (error) {
+      alert(error)
+      setLoading(false)
+      setIsOpen(false)
+      return
+    }
+
     if (data && data.length > 0) {
       const cabeceras = ['Fecha', 'Tipo', 'Monto', 'Categoría', 'Descripción', 'Estado', 'Tipo de Gasto', 'Cuota', 'Compartido']
       

@@ -22,13 +22,13 @@ export function ModuloPareja(props: ModuloParejaProps) {
   if (parejaId && !miCodigo) return null
 
   const handleGenerarCodigo = async () => {
-    try {
-      const codigo = await generarCodigoVinculacion()
-      setMiCodigo(codigo)
-      setErrorMsj(null)
-    } catch (e) {
-      setErrorMsj(e instanceof Error ? e.message : 'No se pudo generar el código')
+    setErrorMsj(null)
+    const result = await generarCodigoVinculacion()
+    if (!result.success) {
+      setErrorMsj(result.error)
+      return
     }
+    setMiCodigo(result.codigo)
   }
 
   const handleCopiar = () => {
@@ -43,7 +43,7 @@ export function ModuloPareja(props: ModuloParejaProps) {
     setErrorMsj(null)
     startTransition(async () => {
       const result = await vincularPareja(formData)
-      if (result?.error) {
+      if (!result.success) {
         setErrorMsj(result.error)
       } else {
         router.refresh()

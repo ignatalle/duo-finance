@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { MSG_NO_AUTH } from '@/lib/actionAuth'
 
 export interface PresupuestoCategoria {
   id: string
@@ -14,28 +15,33 @@ export interface PresupuestoCategoria {
 }
 
 export async function obtenerPresupuestos(mesRef: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'No autenticado', data: null }
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { data: null, error: MSG_NO_AUTH }
 
-  const { data, error } = await supabase
-    .from('presupuestos_categoria')
-    .select('*')
-    .eq('usuario_id', user.id)
-    .eq('mes_ref', mesRef)
-    .order('categoria')
+    const { data, error } = await supabase
+      .from('presupuestos_categoria')
+      .select('*')
+      .eq('usuario_id', user.id)
+      .eq('mes_ref', mesRef)
+      .order('categoria')
 
-  if (error) {
-    console.error('Error obteniendo presupuestos:', error)
-    return { error: error.message, data: null }
+    if (error) {
+      console.error('Error obteniendo presupuestos:', error)
+      return { data: null, error: 'No se pudieron cargar los presupuestos' }
+    }
+    return { data: data as PresupuestoCategoria[] || [], error: null }
+  } catch (e) {
+    console.error('obtenerPresupuestos:', e)
+    return { data: null, error: 'No se pudieron cargar los presupuestos' }
   }
-  return { data: data as PresupuestoCategoria[] || [], error: null }
 }
 
 export async function guardarPresupuesto(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: MSG_NO_AUTH }
 
   const { data: perfil } = await supabase.from('perfiles').select('pareja_id').eq('id', user.id).maybeSingle()
 
@@ -65,7 +71,7 @@ export async function guardarPresupuesto(formData: FormData) {
 
     if (error) {
       console.error('Error actualizando presupuesto:', error)
-      return { success: false, error: error.message }
+      return { success: false, error: 'No se pudo guardar el presupuesto' }
     }
   } else {
     const { data: existente } = await supabase
@@ -91,7 +97,7 @@ export async function guardarPresupuesto(formData: FormData) {
 
     if (error) {
       console.error('Error guardando presupuesto:', error)
-      return { success: false, error: error.message }
+      return { success: false, error: 'No se pudo guardar el presupuesto' }
     }
   }
 
@@ -103,7 +109,7 @@ export async function guardarPresupuesto(formData: FormData) {
 export async function eliminarPresupuesto(id: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'No autenticado' }
+  if (!user) return { success: false, error: MSG_NO_AUTH }
 
   const { error } = await supabase
     .from('presupuestos_categoria')

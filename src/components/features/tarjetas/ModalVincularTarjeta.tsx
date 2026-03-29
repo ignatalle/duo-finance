@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { X, Loader2 } from 'lucide-react'
 import { crearTarjeta, editarTarjeta, type Tarjeta } from '@/app/actions/tarjetas'
@@ -21,32 +21,16 @@ interface ModalVincularTarjetaProps {
 export function ModalVincularTarjeta({ isOpen, onClose, tarjetaEditar }: ModalVincularTarjetaProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [nombre, setNombre] = useState('')
-  const [banco, setBanco] = useState('')
-  const [ultimosDigitos, setUltimosDigitos] = useState('')
-  const [cierreDia, setCierreDia] = useState(15)
-  const [vencimientoDia, setVencimientoDia] = useState(20)
-  const [estilo, setEstilo] = useState('orange')
+  const [nombre, setNombre] = useState(() => tarjetaEditar?.nombre ?? '')
+  const [banco, setBanco] = useState(() => tarjetaEditar?.banco ?? '')
+  const [ultimosDigitos, setUltimosDigitos] = useState(() =>
+    tarjetaEditar?.ultimos_digitos != null ? String(tarjetaEditar.ultimos_digitos) : ''
+  )
+  const [cierreDia, setCierreDia] = useState(() => tarjetaEditar?.cierre_dia ?? 15)
+  const [vencimientoDia, setVencimientoDia] = useState(() => tarjetaEditar?.vencimiento_dia ?? 20)
+  const [estilo, setEstilo] = useState(() => tarjetaEditar?.estilo || 'orange')
 
   const esEdicion = !!tarjetaEditar
-
-  useEffect(() => {
-    if (isOpen && tarjetaEditar) {
-      setNombre(tarjetaEditar.nombre)
-      setBanco(tarjetaEditar.banco || '')
-      setUltimosDigitos(tarjetaEditar.ultimos_digitos != null ? String(tarjetaEditar.ultimos_digitos) : '')
-      setCierreDia(tarjetaEditar.cierre_dia)
-      setVencimientoDia(tarjetaEditar.vencimiento_dia)
-      setEstilo(tarjetaEditar.estilo || 'orange')
-    } else if (isOpen && !tarjetaEditar) {
-      setNombre('')
-      setBanco('')
-      setUltimosDigitos('')
-      setCierreDia(15)
-      setVencimientoDia(20)
-      setEstilo('orange')
-    }
-  }, [isOpen, tarjetaEditar])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -23,7 +23,7 @@ export async function DashboardSaldos({ inicioMes, finMes, mesRef, usuarioId, me
   const gastos = transacciones?.filter((t) => t.tipo === 'gasto').reduce((a, t) => a + t.monto, 0) || 0
   const saldoTotalContable = ingresos - gastos
 
-  const { data: gastosFijosPendientes } = await obtenerGastosFijosPendientes(usuarioId, mesRef)
+  const { data: gastosFijosPendientes } = await obtenerGastosFijosPendientes(mesRef)
   const pendientesFijos = gastosFijosPendientes?.reduce((a, g) => a + g.monto, 0) || 0
   const saldoDisponibleReal = calcularSaldoDisponibleReal(saldoTotalContable, pendientesFijos) - (metaAhorroGuardada || 0)
 

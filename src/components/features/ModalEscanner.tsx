@@ -28,7 +28,6 @@ interface ModalEscannerProps {
 export function ModalEscanner({ isOpen, onClose }: ModalEscannerProps) {
   const [step, setStep] = useState<'idle' | 'scanning' | 'review' | 'error'>('idle')
   const [gastos, setGastos] = useState<GastoParseado[]>([])
-  const [textoOCR, setTextoOCR] = useState<string>('')
   const [errorMsg, setErrorMsg] = useState<string>('')
   const [usandoIA, setUsandoIA] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -75,7 +74,6 @@ export function ModalEscanner({ isOpen, onClose }: ModalEscannerProps) {
     setStep('scanning')
     setErrorMsg('')
     setGastos([])
-    setTextoOCR('')
 
     try {
       let texto: string
@@ -86,8 +84,6 @@ export function ModalEscanner({ isOpen, onClose }: ModalEscannerProps) {
         const { data } = await Tesseract.recognize(file, 'spa+eng', { logger: () => {} })
         texto = data.text.trim()
       }
-      setTextoOCR(texto)
-
       let parseados = parsearResumenTarjeta(texto)
       if (parseados.length === 0) parseados = parsearTextoOCR(texto)
       if (parseados.length === 0) {
@@ -167,26 +163,9 @@ export function ModalEscanner({ isOpen, onClose }: ModalEscannerProps) {
     setTimeout(() => {
       setStep('idle')
       setGastos([])
-      setTextoOCR('')
       setErrorMsg('')
       setUsandoIA(false)
     }, 300)
-  }
-
-  const handleAnalizarConIA = async () => {
-    if (!textoOCR.trim()) return
-    setUsandoIA(true)
-    const res = await analizarDocumentoConIA(textoOCR)
-    setUsandoIA(false)
-    if (res.success && res.gastos?.length) {
-      setGastos(res.gastos)
-      setUsandoIA(true)
-      setStep('review')
-      setErrorMsg('')
-      toast.showToast('La IA detectó los gastos correctamente.')
-    } else {
-      setErrorMsg(res.error || 'No se pudieron detectar gastos.')
-    }
   }
 
   const handleClose = () => {

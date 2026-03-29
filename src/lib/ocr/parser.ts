@@ -165,7 +165,6 @@ export function parsearResumenTarjeta(texto: string): GastoParseado[] {
   let m
   const vistos = new Set<string>()
   while ((m = re.exec(texto)) !== null) {
-    const fecha = m[1]
     const detalle = m[2].trim()
     const montoStr = m[3].replace(/\./g, '').replace(',', '.')
     const monto = parseFloat(montoStr)

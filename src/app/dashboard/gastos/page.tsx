@@ -35,7 +35,7 @@ export default async function GastosPage(props: { searchParams: Promise<{ mes?: 
   const totalFijosNeto = totalIngresos - totalGastosFijos
 
   const { data: presupuestos } = await obtenerPresupuestos(mesParam)
-  const { data: consumoPorCat } = await obtenerConsumoPorCategoria(user.id, mesParam)
+  const { data: consumoPorCat } = await obtenerConsumoPorCategoria(mesParam)
   const { data: metaAhorroGuardada } = await obtenerMetaAhorroMensual(mesParam)
   const consumoPorCategoria = consumoPorCat || {}
   const totalPresupuestado = (presupuestos || []).reduce((a, p) => a + p.limite_mensual, 0)
@@ -52,7 +52,6 @@ export default async function GastosPage(props: { searchParams: Promise<{ mes?: 
         <PlanificacionFijos
           ingresos={ingresos}
           gastosFijos={gastosFijos}
-          usuarioId={user.id}
         />
         <PlanificacionVariables
           presupuestos={presupuestos || []}

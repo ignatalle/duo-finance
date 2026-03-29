@@ -2,17 +2,18 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { MSG_NO_AUTH } from '@/lib/actionAuth'
 
 export async function registrarTransaccion(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Usuario no autenticado')
+  if (!user) return { success: false, error: MSG_NO_AUTH }
 
   const { data: perfil } = await supabase.from('perfiles').select('pareja_id').eq('id', user.id).single()
 
   const tipo = formData.get('tipo') as string
   const moneda = formData.get('moneda') as string
-  let montoOriginal = parseFloat(formData.get('monto_original') as string)
+  const montoOriginal = parseFloat(formData.get('monto_original') as string)
   let descripcionFinal = (formData.get('descripcion') as string) || ''
 
   // Validaciones básicas
@@ -124,7 +125,7 @@ export async function registrarTransaccion(formData: FormData) {
 export async function eliminarTransaccion(id: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Usuario no autenticado')
+  if (!user) return { success: false, error: MSG_NO_AUTH }
 
   const { data: original, error: errOriginal } = await supabase
     .from('transacciones')
@@ -135,7 +136,7 @@ export async function eliminarTransaccion(id: string) {
 
   if (errOriginal || !original) {
     console.error('eliminarTransaccion: fila no encontrada', errOriginal)
-    return { error: 'Movimiento no encontrado' }
+    return { success: false, error: 'Movimiento no encontrado' }
   }
 
   const esPlanCuotas =
@@ -175,7 +176,7 @@ export async function eliminarTransaccion(id: string) {
 
   if (error) {
     console.error('Error eliminando transacción:', error)
-    return { error: 'No se pudo eliminar' }
+    return { success: false, error: 'No se pudo eliminar' }
   }
 
   revalidatePath('/dashboard')
@@ -187,11 +188,11 @@ export async function eliminarTransaccion(id: string) {
 export async function editarTransaccion(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Usuario no autenticado')
+  if (!user) return { success: false, error: MSG_NO_AUTH }
 
   const id = formData.get('id') as string
   if (!id?.trim()) {
-    return { error: 'ID inválido' }
+    return { success: false, error: 'ID inválido' }
   }
 
   const { data: original, error: errOriginal } = await supabase
@@ -203,7 +204,7 @@ export async function editarTransaccion(formData: FormData) {
 
   if (errOriginal || !original) {
     console.error('editarTransaccion: fila no encontrada', errOriginal)
-    return { error: 'Movimiento no encontrado' }
+    return { success: false, error: 'Movimiento no encontrado' }
   }
 
   const tipo = (formData.get('tipo') as string) || original.tipo
@@ -211,10 +212,10 @@ export async function editarTransaccion(formData: FormData) {
   const fechaStr = formData.get('fecha') as string | null
 
   if (Number.isNaN(monto) || monto <= 0) {
-    return { error: 'Monto inválido' }
+    return { success: false, error: 'Monto inválido' }
   }
   if (!['ingreso', 'gasto'].includes(tipo)) {
-    return { error: 'Tipo de transacción inválido' }
+    return { success: false, error: 'Tipo de transacción inválido' }
   }
 
   const categoria = formData.get('categoria') as string
@@ -295,7 +296,7 @@ export async function editarTransaccion(formData: FormData) {
 
     if (errHermanas) {
       console.error('Error buscando cuotas hermanas:', errHermanas)
-      return { error: 'No se pudieron buscar las cuotas relacionadas' }
+      return { success: false, error: 'No se pudieron buscar las cuotas relacionadas' }
     }
 
     idsGrupo = (hermanas || [])
@@ -313,7 +314,7 @@ export async function editarTransaccion(formData: FormData) {
 
   if (errorBulk) {
     console.error('Error actualizando transacciones (grupo):', errorBulk)
-    return { error: 'No se pudo editar' }
+    return { success: false, error: 'No se pudo editar' }
   }
 
   const { error: errorFila } = await supabase
@@ -324,7 +325,7 @@ export async function editarTransaccion(formData: FormData) {
 
   if (errorFila) {
     console.error('Error actualizando transacción (fila):', errorFila)
-    return { error: 'No se pudo editar' }
+    return { success: false, error: 'No se pudo editar' }
   }
 
   revalidatePath('/dashboard')
@@ -335,86 +336,120 @@ export async function editarTransaccion(formData: FormData) {
 
 // Obtener datos para exportar a Excel/CSV
 export async function obtenerDatosExportacion(rango: 'mes' | 'anio', mesRef: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'No autorizado' }
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { data: null, error: MSG_NO_AUTH }
 
-  const [year, month] = mesRef.split('-')
-  let inicio, fin
+    const [year, month] = mesRef.split('-')
+    let inicio: string
+    let fin: string
 
-  if (rango === 'mes') {
-    inicio = new Date(Number(year), Number(month) - 1, 1).toISOString()
-    fin = new Date(Number(year), Number(month), 0, 23, 59, 59).toISOString()
-  } else {
-    inicio = new Date(Number(year), 0, 1).toISOString()
-    fin = new Date(Number(year), 11, 31, 23, 59, 59).toISOString()
+    if (rango === 'mes') {
+      inicio = new Date(Number(year), Number(month) - 1, 1).toISOString()
+      fin = new Date(Number(year), Number(month), 0, 23, 59, 59).toISOString()
+    } else {
+      inicio = new Date(Number(year), 0, 1).toISOString()
+      fin = new Date(Number(year), 11, 31, 23, 59, 59).toISOString()
+    }
+
+    const { data, error } = await supabase
+      .from('transacciones')
+      .select('*')
+      .eq('usuario_id', user.id)
+      .gte('created_at', inicio)
+      .lte('created_at', fin)
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      console.error('obtenerDatosExportacion:', error)
+      return { data: null, error: 'No se pudieron obtener los movimientos' }
+    }
+
+    return { data: data ?? [], error: null }
+  } catch (e) {
+    console.error('obtenerDatosExportacion:', e)
+    return { data: null, error: 'No se pudieron obtener los movimientos' }
   }
-
-  const { data } = await supabase
-    .from('transacciones')
-    .select('*')
-    .gte('created_at', inicio)
-    .lte('created_at', fin)
-    .order('created_at', { ascending: true })
-
-  return { data }
 }
 
 export async function marcarComoPagado(id: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Usuario no autenticado')
+  if (!user) return { success: false, error: MSG_NO_AUTH }
 
   const { error } = await supabase.from('transacciones').update({ estado: 'pagado' }).eq('id', id).eq('usuario_id', user.id)
   if (error) {
     console.error('Error marcando como pagado:', error)
-    return { error: 'No se pudo actualizar' }
+    return { success: false, error: 'No se pudo actualizar' }
   }
   revalidatePath('/dashboard')
   return { success: true }
 }
 
 /** Gastos fijos pendientes del mes (estado=pendiente, tipo_gasto=fijo) para calcular saldo real */
-export async function obtenerGastosFijosPendientes(usuarioId: string, mesRef: string) {
-  const supabase = await createClient()
-  const [year, month] = mesRef.split('-')
-  const inicio = new Date(Number(year), Number(month) - 1, 1).toISOString()
-  const fin = new Date(Number(year), Number(month), 0, 23, 59, 59).toISOString()
+export async function obtenerGastosFijosPendientes(mesRef: string) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { data: [], error: MSG_NO_AUTH }
 
-  const { data, error } = await supabase
-    .from('transacciones')
-    .select('id, monto, descripcion, estado, vencimiento_en')
-    .eq('usuario_id', usuarioId)
-    .eq('tipo', 'gasto')
-    .eq('tipo_gasto', 'fijo')
-    .eq('estado', 'pendiente')
-    .gte('created_at', inicio)
-    .lte('created_at', fin)
+    const [year, month] = mesRef.split('-')
+    const inicio = new Date(Number(year), Number(month) - 1, 1).toISOString()
+    const fin = new Date(Number(year), Number(month), 0, 23, 59, 59).toISOString()
 
-  if (error) return { data: [], error: error.message }
-  return { data: data || [], error: null }
+    const { data, error } = await supabase
+      .from('transacciones')
+      .select('id, monto, descripcion, estado, vencimiento_en')
+      .eq('usuario_id', user.id)
+      .eq('tipo', 'gasto')
+      .eq('tipo_gasto', 'fijo')
+      .eq('estado', 'pendiente')
+      .gte('created_at', inicio)
+      .lte('created_at', fin)
+
+    if (error) {
+      console.error('obtenerGastosFijosPendientes:', error)
+      return { data: [], error: 'No se pudieron cargar los gastos fijos' }
+    }
+    return { data: data || [], error: null }
+  } catch (e) {
+    console.error('obtenerGastosFijosPendientes:', e)
+    return { data: [], error: 'No se pudieron cargar los gastos fijos' }
+  }
 }
 
 /** Consumo por categoría en el mes (suma de gastos variables y no fijos) */
-export async function obtenerConsumoPorCategoria(usuarioId: string, mesRef: string) {
-  const supabase = await createClient()
-  const [year, month] = mesRef.split('-')
-  const inicio = new Date(Number(year), Number(month) - 1, 1).toISOString()
-  const fin = new Date(Number(year), Number(month), 0, 23, 59, 59).toISOString()
+export async function obtenerConsumoPorCategoria(mesRef: string) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { data: {} as Record<string, number>, error: MSG_NO_AUTH }
 
-  const { data, error } = await supabase
-    .from('transacciones')
-    .select('categoria, monto')
-    .eq('usuario_id', usuarioId)
-    .eq('tipo', 'gasto')
-    .gte('created_at', inicio)
-    .lte('created_at', fin)
+    const [year, month] = mesRef.split('-')
+    const inicio = new Date(Number(year), Number(month) - 1, 1).toISOString()
+    const fin = new Date(Number(year), Number(month), 0, 23, 59, 59).toISOString()
 
-  if (error) return { data: {} as Record<string, number>, error: error.message }
+    const { data, error } = await supabase
+      .from('transacciones')
+      .select('categoria, monto')
+      .eq('usuario_id', user.id)
+      .eq('tipo', 'gasto')
+      .gte('created_at', inicio)
+      .lte('created_at', fin)
 
-  const consumido: Record<string, number> = {}
-  for (const t of data || []) {
-    consumido[t.categoria] = (consumido[t.categoria] || 0) + t.monto
+    if (error) {
+      console.error('obtenerConsumoPorCategoria:', error)
+      return { data: {} as Record<string, number>, error: 'No se pudo calcular el consumo' }
+    }
+
+    const consumido: Record<string, number> = {}
+    for (const t of data || []) {
+      consumido[t.categoria] = (consumido[t.categoria] || 0) + t.monto
+    }
+    return { data: consumido, error: null }
+  } catch (e) {
+    console.error('obtenerConsumoPorCategoria:', e)
+    return { data: {} as Record<string, number>, error: 'No se pudo calcular el consumo' }
   }
-  return { data: consumido, error: null }
 }

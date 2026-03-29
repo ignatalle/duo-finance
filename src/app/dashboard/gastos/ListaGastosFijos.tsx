@@ -8,14 +8,18 @@ import { es } from 'date-fns/locale'
 import type { Transaccion } from '@/types'
 import { useToast } from '@/components/ui/Toast'
 
-export function ListaGastosFijos({ gastos, usuarioId }: { gastos: Transaccion[]; usuarioId: string }) {
+export function ListaGastosFijos({ gastos }: { gastos: Transaccion[] }) {
   const [isPending, startTransition] = useTransition()
   const toast = useToast()
 
   const handlePagar = (id: string, nombre: string) => {
     startTransition(async () => {
-      await marcarComoPagado(id)
-      toast.showToast(`Marcaste "${nombre}" como pagado.`)
+      const r = await marcarComoPagado(id)
+      if (r.success) {
+        toast.showToast(`Marcaste "${nombre}" como pagado.`)
+      } else {
+        toast.showToast(r.error ?? 'No se pudo actualizar', 'error')
+      }
     })
   }
 

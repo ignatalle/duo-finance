@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { MSG_NO_AUTH } from '@/lib/actionAuth'
 
 export interface Meta {
   id: string
@@ -15,27 +16,32 @@ export interface Meta {
 }
 
 export async function obtenerMetas() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'No autenticado', data: null }
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { data: null, error: MSG_NO_AUTH }
 
-  const { data, error } = await supabase
-    .from('metas')
-    .select('*')
-    .eq('usuario_id', user.id)
-    .order('fecha_objetivo', { ascending: true, nullsFirst: false })
+    const { data, error } = await supabase
+      .from('metas')
+      .select('*')
+      .eq('usuario_id', user.id)
+      .order('fecha_objetivo', { ascending: true, nullsFirst: false })
 
-  if (error) {
-    console.error('Error obteniendo metas:', error)
-    return { error: error.message, data: null }
+    if (error) {
+      console.error('Error obteniendo metas:', error)
+      return { data: null, error: 'No se pudieron cargar las metas' }
+    }
+    return { data: data as Meta[] || [], error: null }
+  } catch (e) {
+    console.error('obtenerMetas:', e)
+    return { data: null, error: 'No se pudieron cargar las metas' }
   }
-  return { data: data as Meta[] || [], error: null }
 }
 
 export async function crearMeta(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado')
+  if (!user) return { success: false, error: MSG_NO_AUTH }
 
   const nombre = formData.get('nombre') as string
   const objetivo = parseFloat(formData.get('objetivo') as string) || 0
@@ -68,7 +74,7 @@ export async function crearMeta(formData: FormData) {
 export async function actualizarMeta(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado')
+  if (!user) return { success: false, error: MSG_NO_AUTH }
 
   const id = formData.get('id') as string
   const nombre = formData.get('nombre') as string
@@ -101,7 +107,7 @@ export async function actualizarMeta(formData: FormData) {
 export async function depositarMeta(id: string, monto: number) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado')
+  if (!user) return { success: false, error: MSG_NO_AUTH }
   if (monto <= 0) return { success: false, error: 'El monto debe ser positivo' }
 
   const { data: meta } = await supabase
@@ -133,7 +139,7 @@ export async function depositarMeta(id: string, monto: number) {
 export async function eliminarMeta(id: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado')
+  if (!user) return { success: false, error: MSG_NO_AUTH }
 
   const { error } = await supabase
     .from('metas')

@@ -2,114 +2,21 @@
 
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { TrendingUp, BarChart3, Activity, PiggyBank } from 'lucide-react'
+import { PiggyBank } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { guardarMetaAhorroMensual } from '@/app/actions/metasAhorroMensual'
-
-type VistaGrafico = 'linea' | 'velas' | 'area'
-
-type TransaccionChart = { monto: number; tipo: 'ingreso' | 'gasto'; created_at: string }
-
-type PuntoDia = {
-  dia: number
-  fechaLabel: string
-  ingresos: number
-  gastos: number
-  neto: number
-  saldoAcum: number
-}
-
-type PuntoCandlestick = { open: number; high: number; low: number; close: number; diaInicio: number; diaFin: number }
-
-function procesarTransacciones(
-  transacciones: TransaccionChart[],
-  ultimoDiaMes: number,
-  mesParam: string
-): { diario: PuntoDia[]; velas: PuntoCandlestick[] } {
-  const [year, month] = mesParam.split('-').map(Number)
-  const ingresosPorDia = new Map<number, number>()
-  const gastosPorDia = new Map<number, number>()
-  for (let d = 1; d <= ultimoDiaMes; d++) {
-    ingresosPorDia.set(d, 0)
-    gastosPorDia.set(d, 0)
-  }
-
-  for (const t of transacciones) {
-    const dia = new Date(t.created_at).getDate()
-    if (t.tipo === 'ingreso') {
-      ingresosPorDia.set(dia, (ingresosPorDia.get(dia) ?? 0) + t.monto)
-    } else {
-      gastosPorDia.set(dia, (gastosPorDia.get(dia) ?? 0) + t.monto)
-    }
-  }
-
-  const diario: PuntoDia[] = []
-  let saldoAcum = 0
-  for (let d = 1; d <= ultimoDiaMes; d++) {
-    const ingresos = ingresosPorDia.get(d) ?? 0
-    const gastos = gastosPorDia.get(d) ?? 0
-    const neto = ingresos - gastos
-    saldoAcum += neto
-    const fecha = new Date(year, month - 1, d)
-    diario.push({
-      dia: d,
-      fechaLabel: format(fecha, "d 'de' MMM, yyyy", { locale: es }),
-      ingresos,
-      gastos,
-      neto,
-      saldoAcum,
-    })
-  }
-
-  if (diario.length === 0) return { diario: [], velas: [] }
-
-  const nPeriodos = 5
-  const ptsPorPeriodo = Math.ceil(diario.length / nPeriodos)
-  const velas: PuntoCandlestick[] = []
-
-  for (let p = 0; p < nPeriodos; p++) {
-    const start = p * ptsPorPeriodo
-    const end = Math.min(start + ptsPorPeriodo, diario.length)
-    const slice = diario.slice(start, end)
-    if (slice.length === 0) continue
-    const open = p === 0 ? 0 : diario[Math.max(0, start - 1)].saldoAcum
-    const close = slice[slice.length - 1].saldoAcum
-    const saldos = slice.map((s) => s.saldoAcum)
-    velas.push({
-      open,
-      high: Math.max(open, close, ...saldos),
-      low: Math.min(open, close, ...saldos),
-      close,
-      diaInicio: slice[0].dia,
-      diaFin: slice[slice.length - 1].dia,
-    })
-  }
-
-  if (velas.length === 0) {
-    const c = diario[diario.length - 1].saldoAcum
-    velas.push({ open: 0, high: Math.max(0, c), low: Math.min(0, c), close: c, diaInicio: 1, diaFin: ultimoDiaMes })
-  }
-
-  return { diario, velas }
-}
-
-const OPCIONES_VISTA: { valor: VistaGrafico; etiqueta: string; icono: typeof TrendingUp }[] = [
-  { valor: 'linea', etiqueta: 'Línea', icono: TrendingUp },
-  { valor: 'velas', etiqueta: 'Velas', icono: BarChart3 },
-  { valor: 'area', etiqueta: 'Área', icono: Activity },
-]
-
-const formatearMonto = (n: number) =>
-  new Intl.NumberFormat('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n)
-
-function parseMonto(texto: string): number {
-  const limpiado = texto.replace(/\D/g, '').trim()
-  return limpiado ? parseInt(limpiado, 10) : 0
-}
-
-const formatMonto = (n: number) =>
-  new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(n)
+import {
+  type VistaGrafico,
+  type TransaccionChart,
+  type PuntoDia,
+  type PuntoCandlestick,
+  procesarTransacciones,
+  OPCIONES_VISTA,
+  formatearMontoGrafico,
+  parseMontoMeta,
+  formatMontoCurrency,
+} from '@/components/features/dashboardGraficoModel'
 
 export function DashboardGrafico({
   transacciones = [],
@@ -142,7 +49,7 @@ export function DashboardGrafico({
     setMetaInput(metaAhorroGuardada ? String(metaAhorroGuardada) : '')
   }, [metaAhorroGuardada, mesParam])
 
-  const metaParaCalcular = metaInput.trim() ? parseMonto(metaInput) : metaGuardada
+  const metaParaCalcular = metaInput.trim() ? parseMontoMeta(metaInput) : metaGuardada
   const { gastoDiario, gastoSemanal, diasRestantes, esMesActual } = useMemo(() => {
     const [year, month] = (mesParam || new Date().toISOString().slice(0, 7)).split('-')
     const hoy = new Date()
@@ -166,7 +73,7 @@ export function DashboardGrafico({
 
   const handleGuardar = useCallback(async () => {
     setErrorGuardado(null)
-    const monto = parseMonto(metaInput)
+    const monto = parseMontoMeta(metaInput)
     if (monto < 0) return
     setGuardando(true)
     const { success, error } = await guardarMetaAhorroMensual(mesParam, monto)
@@ -293,7 +200,7 @@ export function DashboardGrafico({
                 {d.diaInicio === d.diaFin ? fechaInicio : `${fechaInicio} – ${fechaFin}`}
               </p>
               <p className="text-zinc-300">
-                Saldo: <span className={d.close >= 0 ? 'text-teal-400' : 'text-rose-400'}>$ {formatearMonto(d.close)}</span>
+                Saldo: <span className={d.close >= 0 ? 'text-teal-400' : 'text-rose-400'}>$ {formatearMontoGrafico(d.close)}</span>
               </p>
             </div>
           ),
@@ -309,13 +216,13 @@ export function DashboardGrafico({
             <div className="text-xs space-y-1">
               <p className="font-bold text-white">{punto.fechaLabel}</p>
               <p className="text-zinc-300">
-                Saldo: <span className={punto.saldoAcum >= 0 ? 'text-teal-400' : 'text-rose-400'}>$ {formatearMonto(punto.saldoAcum)}</span>
+                Saldo: <span className={punto.saldoAcum >= 0 ? 'text-teal-400' : 'text-rose-400'}>$ {formatearMontoGrafico(punto.saldoAcum)}</span>
               </p>
               {punto.ingresos > 0 && (
-                <p className="text-teal-400">Ingresos: $ {formatearMonto(punto.ingresos)}</p>
+                <p className="text-teal-400">Ingresos: $ {formatearMontoGrafico(punto.ingresos)}</p>
               )}
               {punto.gastos > 0 && (
-                <p className="text-rose-400">Gastos: $ {formatearMonto(punto.gastos)}</p>
+                <p className="text-rose-400">Gastos: $ {formatearMontoGrafico(punto.gastos)}</p>
               )}
             </div>
           ),
@@ -454,7 +361,7 @@ export function DashboardGrafico({
       <div className="flex items-center justify-between mt-3 pt-3 border-t border-zinc-800 relative z-10">
         <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Saldo al cierre</p>
         <span className={`font-bold font-mono text-lg ${saldoCierre >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-          {saldoCierre >= 0 ? '+' : ''}${formatearMonto(saldoCierre)}
+          {saldoCierre >= 0 ? '+' : ''}${formatearMontoGrafico(saldoCierre)}
         </span>
       </div>
 
@@ -464,18 +371,18 @@ export function DashboardGrafico({
             <p className="text-xs text-zinc-500">
               Podés gastar{' '}
               <span className="text-cyan-300 font-bold [text-shadow:0_0_8px_rgba(34,211,238,0.9),0_0_20px_rgba(34,211,238,0.5)]">
-                {formatMonto(gastoDiario)}
+                {formatMontoCurrency(gastoDiario)}
               </span>
               /día y{' '}
               <span className="text-cyan-300 font-bold [text-shadow:0_0_8px_rgba(34,211,238,0.9),0_0_20px_rgba(34,211,238,0.5)]">
-                {formatMonto(gastoSemanal)}
+                {formatMontoCurrency(gastoSemanal)}
               </span>
               /semana
               {esMesActual && <span className="text-zinc-600"> ({diasRestantes} días restantes)</span>}
             </p>
           ) : metaParaCalcular > 0 ? (
             <p className="text-xs text-amber-400">
-              Para ahorrar {formatMonto(metaParaCalcular)} este mes necesitás más ingresos o menos gastos.
+              Para ahorrar {formatMontoCurrency(metaParaCalcular)} este mes necesitás más ingresos o menos gastos.
             </p>
           ) : (
             <p className="text-xs text-zinc-500">No hay saldo disponible para gastar este mes.</p>
@@ -504,7 +411,7 @@ export function DashboardGrafico({
           )}
           {metaGuardada > 0 && (
             <p className="text-xs text-teal-400">
-              Meta guardada: {formatMonto(metaGuardada)} — se descuenta de tu saldo disponible.
+              Meta guardada: {formatMontoCurrency(metaGuardada)} — se descuenta de tu saldo disponible.
             </p>
           )}
         </div>

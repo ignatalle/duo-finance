@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { desvincularPareja } from '@/app/actions/pareja'
 import { Menu, X, Link2Off, Settings, Loader2 } from 'lucide-react'
@@ -9,19 +9,18 @@ export function MenuConfiguracion({ parejaId }: { parejaId: string | null | unde
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [desvinculando, setDesvinculando] = useState(false)
-  const [isPending, startTransition] = useTransition()
 
   const handleDesvincular = () => {
     if (!confirm('¿Desvincular tu cuenta de la pareja? Podrás volver a vincularte con un código más tarde.')) return
     setDesvinculando(true)
-    startTransition(async () => {
+    void (async () => {
       const result = await desvincularPareja()
-      if (!result?.error) {
+      if (result.success) {
         setIsOpen(false)
         router.refresh()
       }
       setDesvinculando(false)
-    })
+    })()
   }
 
   return (

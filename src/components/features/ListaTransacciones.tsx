@@ -4,6 +4,7 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { eliminarTransaccion, editarTransaccion, marcarComoPagado } from '@/app/actions/transacciones'
 import { useState, useTransition } from 'react'
+import { useToast } from '@/components/ui/Toast'
 import { CheckCircle2, Pencil, Trash2, Clock } from 'lucide-react'
 import type { Transaccion } from '@/types'
 
@@ -15,6 +16,7 @@ const CATEGORIAS = [
 ]
 
 export function ListaTransacciones({ transacciones, usuarioActualId }: { transacciones: Transaccion[], usuarioActualId: string }) {
+  const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -38,7 +40,12 @@ export function ListaTransacciones({ transacciones, usuarioActualId }: { transac
 
   const handlePagar = (id: string) => {
     startTransition(async () => {
-      await marcarComoPagado(id)
+      const r = await marcarComoPagado(id)
+      if (r.success) {
+        toast.showToast('Movimiento marcado como pagado.')
+      } else {
+        toast.showToast(r.error ?? 'No se pudo actualizar', 'error')
+      }
     })
   }
 

@@ -1,6 +1,8 @@
 'use server'
 
 import type { GastoParseado } from '@/lib/ocr/parser'
+import { createClient } from '@/lib/supabase/server'
+import { MSG_NO_AUTH } from '@/lib/actionAuth'
 
 const CATEGORIAS = [
   '🛒 Supermercado',
@@ -35,7 +37,7 @@ function getIcon(cat: string): string {
 
 function normalizarGasto(raw: { desc?: string; monto?: number; cat?: string }): GastoParseado | null {
   const desc = String(raw.desc || '').trim()
-  let monto = Number(raw.monto)
+  const monto = Number(raw.monto)
   if (!desc || Number.isNaN(monto) || monto <= 0 || monto >= 1e9) return null
   let cat = String(raw.cat || '').trim()
   if (!CATEGORIAS.includes(cat as (typeof CATEGORIAS)[number])) {
@@ -53,6 +55,10 @@ export async function analizarDocumentoConIA(texto: string): Promise<{
   gastos?: GastoParseado[]
   error?: string
 }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: MSG_NO_AUTH }
+
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey?.trim()) {
     return { success: false, error: 'Configurá OPENAI_API_KEY en .env.local para usar análisis por IA.' }
@@ -94,8 +100,12 @@ ${texto.slice(0, 12000)}
     })
 
     if (!res.ok) {
-      const err = await res.text()
-      return { success: false, error: `Error de la API: ${res.status}` }
+      const body = await res.text()
+      console.error('analizarDocumentoConIA API:', res.status, body.slice(0, 500))
+      return {
+        success: false,
+        error: 'El servicio de análisis no está disponible. Intentá más tarde.',
+      }
     }
 
     const data = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> }
@@ -116,7 +126,7 @@ ${texto.slice(0, 12000)}
     console.error('analizarDocumentoConIA:', err)
     return {
       success: false,
-      error: err instanceof Error ? err.message : 'Error al analizar con IA.',
+      error: 'No se pudo analizar el documento.',
     }
   }
 }

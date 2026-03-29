@@ -10,10 +10,9 @@ import { ListaGastosFijos } from '@/app/dashboard/gastos/ListaGastosFijos'
 interface PlanificacionFijosProps {
   ingresos: Transaccion[]
   gastosFijos: Transaccion[]
-  usuarioId: string
 }
 
-export function PlanificacionFijos({ ingresos, gastosFijos, usuarioId }: PlanificacionFijosProps) {
+export function PlanificacionFijos({ ingresos, gastosFijos }: PlanificacionFijosProps) {
   const modal = useDashboardModal()
 
   const cobroTexto = (t: Transaccion) => {
@@ -106,7 +105,7 @@ export function PlanificacionFijos({ ingresos, gastosFijos, usuarioId }: Planifi
               )}
             </div>
           ) : (
-            <ListaGastosFijos gastos={gastosFijos} usuarioId={usuarioId} />
+            <ListaGastosFijos gastos={gastosFijos} />
           )}
         </div>
       </div>
