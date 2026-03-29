@@ -80,10 +80,16 @@ export async function registrarTransaccion(formData: FormData) {
     let mesesAdelante = 0
 
     const fechaBase = fechaStr ? new Date(fechaStr + 'T12:00:00') : new Date()
-    const diaCompra = Math.min(fechaBase.getDate(), 28) 
+    const diaCompraOriginal = fechaBase.getDate()
 
     while (cuotaIteracion <= cuota_total) {
-      const fechaGasto = new Date(fechaBase.getFullYear(), fechaBase.getMonth() + mesesAdelante, diaCompra)
+      const diaAUsar =
+        mesesAdelante === 0 ? diaCompraOriginal : Math.min(diaCompraOriginal, 28)
+      const fechaGasto = new Date(
+        fechaBase.getFullYear(),
+        fechaBase.getMonth() + mesesAdelante,
+        diaAUsar
+      )
 
       transaccionesMultiples.push({
         ...datosBase,
