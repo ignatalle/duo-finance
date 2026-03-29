@@ -1,22 +1,17 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { CreditCard } from 'lucide-react'
 import type { Tarjeta } from '@/app/actions/tarjetas'
+import { eliminarTransaccion } from '@/app/actions/transacciones'
+import { ModalEditarTransaccion } from '@/components/features/ModalEditarTransaccion'
+import type { Transaccion } from '@/types'
 import { LibertadTarjetas } from './LibertadTarjetas'
 import { CardTarjetaCredito, CardNuevaTarjeta } from './CardTarjetaCredito'
-import { CuotasPendientes } from './CuotasPendientes'
+import { CuotasPendientes, type CuotaItem } from './CuotasPendientes'
 import { ModalVincularTarjeta } from './ModalVincularTarjeta'
 import { ModalConfirmarEliminarTarjeta } from './ModalConfirmarEliminarTarjeta'
-
-interface CuotaItem {
-  detalle: string
-  total: number
-  cuotaActual: number
-  cuotasTotales: number
-  montoCuota: number
-  finMeses: number
-}
 
 interface TarjetasSectionProps {
   tarjetas: Tarjeta[]
@@ -31,9 +26,11 @@ export function TarjetasSection({
   mesLibreDeudas,
   tieneDeuda,
 }: TarjetasSectionProps) {
+  const router = useRouter()
   const [modalOpen, setModalOpen] = useState(false)
   const [tarjetaAEditar, setTarjetaAEditar] = useState<Tarjeta | null>(null)
   const [tarjetaAEliminar, setTarjetaAEliminar] = useState<Tarjeta | null>(null)
+  const [txEditar, setTxEditar] = useState<Transaccion | null>(null)
 
   const openModalCrear = () => {
     setTarjetaAEditar(null)
@@ -51,6 +48,18 @@ export function TarjetasSection({
   const getDeudaTarjeta = (tarjetaId: string) => {
     const cuotas = cuotasPorTarjeta[tarjetaId] || []
     return cuotas.reduce((acc, c) => acc + c.montoCuota * Math.max(0, c.cuotasTotales - c.cuotaActual), 0)
+  }
+
+  const handleEliminarCuota = (c: CuotaItem) => {
+    if (!window.confirm('¿Eliminar todas las cuotas de esta compra?')) return
+    void (async () => {
+      const result = await eliminarTransaccion(c.transaccionOriginal.id)
+      if ('success' in result && result.success) {
+        router.refresh()
+      } else {
+        alert('error' in result ? result.error : 'No se pudo eliminar')
+      }
+    })()
   }
 
   return (
@@ -93,7 +102,12 @@ export function TarjetasSection({
           </div>
 
           {/* Cuotas Pendientes */}
-          <CuotasPendientes tarjetas={tarjetas || []} cuotasPorTarjeta={cuotasPorTarjeta} />
+          <CuotasPendientes
+            tarjetas={tarjetas || []}
+            cuotasPorTarjeta={cuotasPorTarjeta}
+            onEditarCuota={(c) => setTxEditar(c.transaccionOriginal)}
+            onEliminarCuota={handleEliminarCuota}
+          />
         </>
       ) : (
         <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/30 py-16 px-4 md:px-6 text-center">
@@ -122,6 +136,13 @@ export function TarjetasSection({
         />
       )}
 
+      {txEditar && (
+        <ModalEditarTransaccion
+          transaccion={txEditar}
+          onClose={() => setTxEditar(null)}
+          onSuccess={() => router.refresh()}
+        />
+      )}
     </div>
   )
 }

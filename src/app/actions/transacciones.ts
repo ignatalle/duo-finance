@@ -119,13 +119,62 @@ export async function eliminarTransaccion(id: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Usuario no autenticado')
-  const { error } = await supabase.from('transacciones').delete().eq('id', id).eq('usuario_id', user.id)
+
+  const { data: original, error: errOriginal } = await supabase
+    .from('transacciones')
+    .select('id, cuota_total, descripcion, tarjeta_id')
+    .eq('id', id)
+    .eq('usuario_id', user.id)
+    .single()
+
+  if (errOriginal || !original) {
+    console.error('eliminarTransaccion: fila no encontrada', errOriginal)
+    return { error: 'Movimiento no encontrado' }
+  }
+
+  const esPlanCuotas =
+    original.cuota_total != null && original.cuota_total > 1
+
+  let error: { message: string } | null = null
+
+  if (esPlanCuotas) {
+    let q = supabase
+      .from('transacciones')
+      .delete()
+      .eq('usuario_id', user.id)
+      .gt('cuota_total', 1)
+
+    if (original.descripcion == null) {
+      q = q.is('descripcion', null)
+    } else {
+      q = q.eq('descripcion', original.descripcion)
+    }
+
+    if (original.tarjeta_id) {
+      q = q.eq('tarjeta_id', original.tarjeta_id)
+    } else {
+      q = q.is('tarjeta_id', null)
+    }
+
+    const res = await q
+    error = res.error
+  } else {
+    const res = await supabase
+      .from('transacciones')
+      .delete()
+      .eq('id', id)
+      .eq('usuario_id', user.id)
+    error = res.error
+  }
+
   if (error) {
     console.error('Error eliminando transacción:', error)
     return { error: 'No se pudo eliminar' }
   }
+
   revalidatePath('/dashboard')
   revalidatePath('/dashboard/movimientos')
+  revalidatePath('/dashboard/tarjetas')
   return { success: true }
 }
 

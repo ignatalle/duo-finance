@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { obtenerTarjetas } from '@/app/actions/tarjetas'
 import { TarjetasSection } from '@/components/features/tarjetas/TarjetasSection'
 import { calcularFechaFinCuotas } from '@/lib/calculos'
+import type { Transaccion } from '@/types'
 
 export default async function TarjetasPage() {
   const supabase = await createClient()
@@ -19,7 +20,18 @@ export default async function TarjetasPage() {
     .not('cuota_total', 'is', null)
     .gte('cuota_actual', 1)
 
-  const cuotasPorTarjeta: Record<string, { detalle: string; total: number; cuotaActual: number; cuotasTotales: number; montoCuota: number; finMeses: number }[]> = {}
+  const cuotasPorTarjeta: Record<
+    string,
+    {
+      detalle: string
+      total: number
+      cuotaActual: number
+      cuotasTotales: number
+      montoCuota: number
+      finMeses: number
+      transaccionOriginal: Transaccion
+    }[]
+  > = {}
   const seen = new Set<string>()
   let maxMesesRestantes = 0
 
@@ -39,6 +51,7 @@ export default async function TarjetasPage() {
       cuotasTotales: t.cuota_total,
       montoCuota: Math.round(t.monto),
       finMeses,
+      transaccionOriginal: t as Transaccion,
     })
   }
 
